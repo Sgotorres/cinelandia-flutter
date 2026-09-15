@@ -70,3 +70,72 @@ lib/
             ├── categoria_chips.dart        # Filtros rápidos (Pizzas, Bebidas, Extras)
             ├── producto_tile.dart          # Ítem táctil con botones (+) y (-)
             └── orden_bottom_bar.dart       # Barra inferior con total y botón "Enviar a Cocina"
+            
+Fase 1: Programación de Software (Lógica, Modelos y Conexión)
+En esta fase nos olvidamos de lo visual y nos concentramos en que los datos fluyan correctamente entre tu base de datos y la aplicación en Flutter.
+
+Lista de tareas:
+
+[ ] Configurar variables de conexión a tu API o base de datos.
+
+[ ] Crear/adaptar la estructura en usuario_model.dart para la autenticación de roles (Admin/Mesero).
+
+[ ] Adaptar producto_model.dart para manejar el menú y las categorías.
+
+[ ] Adaptar pedido_model.dart y pedido_detalle_model.dart para manejar la lógica de las órdenes.
+
+[ ] Programar las peticiones HTTP (GET, POST, PUT, DELETE) en auth_repository.dart, menu_repository.dart y pedidos_repository.dart.
+
+[ ] Configurar la gestión de estado en auth_provider.dart, menu_provider.dart y pedidos_provider.dart.
+
+¿Qué código de la PWA debes subirme para esta fase?
+
+El archivo cinelandia_bd.sql: Para replicar exactamente los campos de las tablas en los modelos de Flutter.
+
+El archivo backend/index.js: Necesito ver las rutas (endpoints) de tu API (ej. /login, /pedidos, /productos) y qué respuestas envían.
+
+Cualquier consulta específica a la base de datos que tengas en backend/db.js.
+
+Fase 2: Desarrollo (Interfaz Visual y Experiencia de Usuario)
+Aquí conectaremos la lógica construida en la Fase 1 con las pantallas de Flutter.
+
+Lista de tareas - Módulo Mesero:
+
+[ ] Construir la pantalla principal de mesas/inicio (mesero_home_screen.dart).
+
+[ ] Programar la vista para armar la orden (tomar_pedido_screen.dart), integrando categoria_chips.dart y producto_tile.dart.
+
+[ ] Configurar el carrito y envío de la orden (resumen_pedido_screen.dart y orden_bottom_bar.dart).
+
+Lista de tareas - Módulo Administrador:
+
+[ ] Construir el panel general de métricas (admin_dashboard_screen.dart y stats_tile.dart).
+
+[ ] Programar la recepción y visualización de órdenes activas (admin_pedidos_screen.dart y pedido_card_desktop.dart).
+
+[ ] Crear la interfaz para agregar, editar o eliminar productos (admin_menu_screen.dart).
+
+[ ] Crear la vista de facturación y cuadre (admin_caja_screen.dart).
+
+¿Qué código de la PWA debes subirme para esta fase?
+
+El archivo frontend/app.js: Especialmente las funciones donde manipulabas el DOM para mostrar los productos, calcular totales y enviar el pedido (para traducir esa misma lógica al estado de Flutter).
+
+El archivo frontend/admin.html: Para analizar la estructura visual que tenías (tablas, botones, menús laterales) y replicar ese diseño usando los widgets de Flutter.
+
+El archivo admin-desktop/main.js: Si tenías lógica específica para el administrador separada allí.
+
+Fase 3: Fase Final (Pruebas, Integración y Cierre)
+Esta es la etapa para definir claramente el fin del proyecto, asegurar la calidad y prepararlo para producción.
+
+Lista de tareas:
+
+[ ] Prueba de flujo completo: Iniciar sesión como mesero, tomar un pedido complejo, enviarlo, iniciar sesión como admin y verificar que se reciba correctamente.
+
+[ ] Pruebas de responsividad: Asegurar que el panel de mesero sea cómodo para uso táctil en móviles/tablets, y que el panel de admin aproveche el espacio en pantallas de escritorio.
+
+[ ] Manejo de errores: Configurar alertas si el servidor no responde o si se pierde la conexión a internet.
+
+[ ] Limpieza general de código (revisar analysis_options.yaml).
+
+[ ] Compilar las versiones finales (APK para los meseros, ejecutable de Windows o versión Web para la caja del administrador).
