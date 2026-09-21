@@ -70,72 +70,49 @@ lib/
             ├── categoria_chips.dart        # Filtros rápidos (Pizzas, Bebidas, Extras)
             ├── producto_tile.dart          # Ítem táctil con botones (+) y (-)
             └── orden_bottom_bar.dart       # Barra inferior con total y botón "Enviar a Cocina"
-            
-Fase 1: Programación de Software (Lógica, Modelos y Conexión)
-En esta fase nos olvidamos de lo visual y nos concentramos en que los datos fluyan correctamente entre tu base de datos y la aplicación en Flutter.
 
-Lista de tareas:
+ Plan de Desarrollo Detallado: Loca Pizza Planeta (Flutter + Supabase)
+ 
+Fase 1: Consolidación de la Capa de Datos y Estado (Fundamentos)
+Ya tienes la base, solo falta conectar el flujo de datos hacia la UI.
 
-[ ] Configurar variables de conexión a tu API o base de datos.
+[ X ] 1.1. Completar Modelos Faltantes: Rellenar producto_model.dart (actualmente vacío en tu estructura) con sus propiedades (id, nombre, precio_g, precio_f, es_recomendado, categoria, etc.) y sus métodos fromJson / toJson.
 
-[ ] Crear/adaptar la estructura en usuario_model.dart para la autenticación de roles (Admin/Mesero).
+[ X ] 1.2. Configurar Providers (Estado Global): Implementar la lógica en providers/menu_provider.dart para que llame a MenuRepository.obtenerMenu() y guarde la lista de pizzas en memoria. Esto evitará llamar a la base de datos cada vez que cambies de pantalla.
 
-[ ] Adaptar producto_model.dart para manejar el menú y las categorías.
+[ X ] 1.3. Provider del Carrito (Mesero): Crear la lógica temporal en pedidos_provider.dart para ir agregando pizzas al carrito, calculando el total dinámicamente y definiendo la lógica de las pizzas "Mitad y Mitad" (usando el producto_2_id de tu modelo).
 
-[ ] Adaptar pedido_model.dart y pedido_detalle_model.dart para manejar la lógica de las órdenes.
+Fase 2: Experiencia del Mesero (Punto de Venta)
+Construir la interfaz fluida para que los meseros trabajen rápido.
 
-[ ] Programar las peticiones HTTP (GET, POST, PUT, DELETE) en auth_repository.dart, menu_repository.dart y pedidos_repository.dart.
+[ ] 2.1. Selección de Mesa: En mesero_home_screen.dart, crear un Grid con las mesas del local. Al pulsar una, se abre la vista de toma de pedidos con el número de mesa seleccionado.
 
-[ ] Configurar la gestión de estado en auth_provider.dart, menu_provider.dart y pedidos_provider.dart.
+[ ] 2.2. Catálogo de Pizzas: En tomar_pedido_screen.dart, consumir el MenuProvider. Usar el widget categoria_chips.dart para filtrar (Especiales, Clásicas) y mostrar el listado usando producto_tile.dart.
 
-¿Qué código de la PWA debes subirme para esta fase?
+[ ] 2.3. Modal de Detalles: Al hacer clic en un producto_tile, abrir un "Bottom Sheet" para elegir el tamaño (Grande o Familiar) y preguntar si es combinada (mitad y mitad).
 
-El archivo cinelandia_bd.sql: Para replicar exactamente los campos de las tablas en los modelos de Flutter.
+[ ] 2.4. Resumen y Envío: En resumen_pedido_screen.dart, mostrar el ticket actual. Al darle "Enviar a Cocina", se ejecutará la función crearPedido que ya tienes en tu PedidosRepository.
 
-El archivo backend/index.js: Necesito ver las rutas (endpoints) de tu API (ej. /login, /pedidos, /productos) y qué respuestas envían.
+Fase 3: Pantalla de Cocina (Tiempo Real)
+El corazón de la pizzería: que los cocineros vean los pedidos al instante.
 
-Cualquier consulta específica a la base de datos que tengas en backend/db.js.
+[ ] 3.1. Stream de Pedidos: En admin_pedidos_screen.dart, en lugar de un FutureBuilder (que consulta una sola vez), implementaremos el .stream() de Supabase. Esto hará que cuando un mesero envíe un pedido, aparezca mágicamente en la pantalla de la cocina en menos de 1 segundo, sin recargar.
 
-Fase 2: Desarrollo (Interfaz Visual y Experiencia de Usuario)
-Aquí conectaremos la lógica construida en la Fase 1 con las pantallas de Flutter.
+[ ] 3.2. Tarjetas Kanban: Diseñar el pedido_card_desktop.dart para mostrar: Mesa, Lista de Pizzas (detalles) y Hora del pedido.
 
-Lista de tareas - Módulo Mesero:
+[ ] 3.3. Transición de Estados: Agregar botones a las tarjetas para que la cocina cambie el estado en un solo clic: Pendiente ➔ En el horno ➔ Lista. Esto actualizará la fila correspondiente en Supabase.
 
-[ ] Construir la pantalla principal de mesas/inicio (mesero_home_screen.dart).
+Fase 4: Panel Administrativo (Gestión y Finanzas)
+Control del negocio para el dueño/administrador.
 
-[ ] Programar la vista para armar la orden (tomar_pedido_screen.dart), integrando categoria_chips.dart y producto_tile.dart.
+[ ] 4.1. CRUD del Menú (admin_menu_screen.dart): Crear la tabla de administración para listar pizzas. Botones para agregar nuevas, editar precios y un Switch para pausarlas (campo disponible = false cuando se quedan sin ingredientes).
 
-[ ] Configurar el carrito y envío de la orden (resumen_pedido_screen.dart y orden_bottom_bar.dart).
+[ ] 4.2. Dashboard de Ventas (admin_dashboard_screen.dart): Consultar Supabase filtrando por estado = 'lista' o estado = 'pagado' y fecha, para mostrar:
 
-Lista de tareas - Módulo Administrador:
+Ventas del día.
 
-[ ] Construir el panel general de métricas (admin_dashboard_screen.dart y stats_tile.dart).
+Ventas de la semana.
 
-[ ] Programar la recepción y visualización de órdenes activas (admin_pedidos_screen.dart y pedido_card_desktop.dart).
+Pizzas más vendidas usando tu componente stats_tile.dart.
 
-[ ] Crear la interfaz para agregar, editar o eliminar productos (admin_menu_screen.dart).
-
-[ ] Crear la vista de facturación y cuadre (admin_caja_screen.dart).
-
-¿Qué código de la PWA debes subirme para esta fase?
-
-El archivo frontend/app.js: Especialmente las funciones donde manipulabas el DOM para mostrar los productos, calcular totales y enviar el pedido (para traducir esa misma lógica al estado de Flutter).
-
-El archivo frontend/admin.html: Para analizar la estructura visual que tenías (tablas, botones, menús laterales) y replicar ese diseño usando los widgets de Flutter.
-
-El archivo admin-desktop/main.js: Si tenías lógica específica para el administrador separada allí.
-
-Fase 3: Fase Final (Pruebas, Integración y Cierre)
-Esta es la etapa para definir claramente el fin del proyecto, asegurar la calidad y prepararlo para producción.
-
-Lista de tareas:
-
-[ ] Prueba de flujo completo: Iniciar sesión como mesero, tomar un pedido complejo, enviarlo, iniciar sesión como admin y verificar que se reciba correctamente.
-
-[ ] Pruebas de responsividad: Asegurar que el panel de mesero sea cómodo para uso táctil en móviles/tablets, y que el panel de admin aproveche el espacio en pantallas de escritorio.
-
-[ ] Manejo de errores: Configurar alertas si el servidor no responde o si se pierde la conexión a internet.
-
-[ ] Limpieza general de código (revisar analysis_options.yaml).
-
-[ ] Compilar las versiones finales (APK para los meseros, ejecutable de Windows o versión Web para la caja del administrador).
+[ ] 4.3. Cierre de Caja (admin_caja_screen.dart): Resumen final para hacer el cuadre del dinero físico vs el sistema.

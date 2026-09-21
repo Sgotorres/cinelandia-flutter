@@ -1,20 +1,34 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
+
+import 'providers/menu_provider.dart';
+import 'providers/pedidos_provider.dart'; // Añadido el import de pedidos
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Cargamos las variables seguras desde el archivo .env
+  
+  // Carga de variables de entorno
   await dotenv.load(fileName: ".env");
-
-  // Inicializamos Supabase
+  
+  // Inicialización de Supabase
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MenuProvider()..cargarMenu()),
+        // Es recomendable registrar tu PedidosProvider de una vez
+        ChangeNotifierProvider(create: (_) => PedidosProvider()), 
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -22,13 +36,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Prueba Supabase',
-      home: const TestConnectionScreen(),
+      home: TestConnectionScreen(),
     );
-  }
-}
+  } // <- Faltaba esta llave para cerrar el build
+} // <- Faltaba esta llave para cerrar la clase MyApp
 
 class TestConnectionScreen extends StatelessWidget {
   const TestConnectionScreen({super.key});
@@ -39,15 +53,11 @@ class TestConnectionScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Prueba de Conexión Supabase')),
       body: Center(
         child: FutureBuilder(
-          // Hacemos una consulta simple a la tabla 'productos' de tu base de datos
           future: Supabase.instance.client.from('productos').select(),
           builder: (context, snapshot) {
-            // Mientras está cargando
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const CircularProgressIndicator();
             }
-            
-            // Si ocurre algún error de conexión o de credenciales
             if (snapshot.hasError) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -58,8 +68,6 @@ class TestConnectionScreen extends StatelessWidget {
                 ),
               );
             }
-
-            // Si la consulta es exitosa
             final data = snapshot.data as List<dynamic>;
             return Padding(
               padding: const EdgeInsets.all(16.0),
@@ -73,7 +81,7 @@ class TestConnectionScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text('Se encontraron ${data.length} productos en la base de datos.'),
+                  Text('Se encontraron ${data.length} productos.'),
                 ],
               ),
             );
