@@ -1,55 +1,89 @@
 // lib/providers/pedidos_provider.dart
 import 'package:flutter/material.dart';
-import '../data/models/pedido_model.dart'; // Importamos el modelo de pedido principal
-import '../data/models/pedido_detalle_model.dart'; // Importamos el modelo de los detalles
+import '../data/models/pedido_detalle_model.dart';
 import '../data/models/producto_model.dart';
-import '../data/repositories/pedidos_repository.dart'; // Conexión directa al repositorio
+import '../data/repositories/pedidos_repository.dart';
 
 class PedidosProvider extends ChangeNotifier {
   final PedidosRepository _pedidosRepository = PedidosRepository();
 
-  String _mesaSeleccionada = '';
+  // Guardamos el ID para la base de datos y el Nombre para mostrar en la interfaz
+  int? _mesaIdSeleccionada;
+  String _mesaNombreSeleccionada = ''; 
+  
   List<PedidoDetalleModel> _carrito = [];
   bool _isLoading = false;
   String _errorMessage = '';
 
-  // Getters para que la interfaz (UI) pueda leer los datos
-  String get mesaSeleccionada => _mesaSeleccionada;
+  // Variables para controlar el estado de "Mitad y Mitad"
+  bool _modoMitadYMitad = false;
+  ProductoModel? _primeraMitad;
+
+  int? _pedidoActivoId;
+
+  // Getters generales
+  int? get mesaIdSeleccionada => _mesaIdSeleccionada;
+  String get mesaNombreSeleccionada => _mesaNombreSeleccionada; 
   List<PedidoDetalleModel> get carrito => _carrito;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
+  int? get pedidoActivoId => _pedidoActivoId;
 
-  // Calcula el total dinámicamente sumando cantidad * precioUnitario de cada ítem en el carrito
+  // Getters para Mitad y Mitad
+  bool get modoMitadYMitad => _modoMitadYMitad;
+  ProductoModel? get primeraMitad => _primeraMitad;
+
+  // Calcula el total dinámicamente
   double get totalPedido {
     return _carrito.fold(0, (total, item) => total + (item.precioUnitario * item.cantidad));
   }
 
-  // 1. Asigna la mesa elegida por el mesero
-  void seleccionarMesa(String mesa) {
-    _mesaSeleccionada = mesa;
+  // --- MÉTODOS PARA CONTROLAR MITAD Y MITAD ---
+  void toggleModoMitad(bool valor) {
+    _modoMitadYMitad = valor;
+    if (!valor) _primeraMitad = null;
     notifyListeners();
   }
 
-  // 2. Agrega un producto al carrito (Maneja pizzas enteras o Mitad/Mitad)
+  void seleccionarPrimeraMitad(ProductoModel producto) {
+    _primeraMitad = producto;
+    notifyListeners();
+  }
+
+  void limpiarMitadTemporal() {
+    _primeraMitad = null;
+    _modoMitadYMitad = false;
+    notifyListeners();
+  }
+
+  // --- 1. SELECCIONAR MESA ---
+  // Ahora recibe el ID numérico (int) para BD y el nombre (String) para la UI
+  void seleccionarMesa(int mesaId, String mesaNombre, {int? pedidoId}) {
+    if (_mesaIdSeleccionada != null && _mesaIdSeleccionada != mesaId) {
+      _carrito.clear();
+      _modoMitadYMitad = false;
+      _primeraMitad = null;
+    }
+    _mesaIdSeleccionada = mesaId;
+    _mesaNombreSeleccionada = mesaNombre;
+    _pedidoActivoId = pedidoId; 
+    notifyListeners();
+  }
+
+  // --- 2. AGREGAR AL CARRITO ---
   void agregarAlCarrito({
     required ProductoModel producto1,
-    ProductoModel? producto2, // Opcional, solo llega si es una pizza combinada
+    ProductoModel? producto2, 
     required int cantidad,
-    required String talla, // Ej: 'Grande' o 'Familiar'
+    required String talla,
   }) {
     double precioUnitario = 0;
-    
-    // Extraemos el precio de la primera pizza según la talla elegida
     double precioP1 = (talla == 'Familiar') ? (producto1.precioF ?? 0) : (producto1.precioG ?? 0);
     
     if (producto2 != null) {
-      // Si es MITAD Y MITAD: extraemos el precio de la segunda pizza
       double precioP2 = (talla == 'Familiar') ? (producto2.precioF ?? 0) : (producto2.precioG ?? 0);
-      
-      // Regla de negocio de la pizzería: Se cobra el precio de la mitad más cara
       precioUnitario = precioP1 > precioP2 ? precioP1 : precioP2;
     } else {
-      // Si es una pizza normal o una bebida (las bebidas usan el campo 'precio' base)
       precioUnitario = precioP1 > 0 ? precioP1 : (producto1.precio ?? 0);
     }
 
@@ -62,26 +96,34 @@ class PedidosProvider extends ChangeNotifier {
     );
 
     _carrito.add(detalle);
-    notifyListeners(); // Avisa a la pantalla para que actualice la lista
+    notifyListeners();
   }
 
-  // 3. Elimina un ítem si el mesero se equivoca
+  // --- 3. REMOVER DEL CARRITO ---
   void removerDelCarrito(int index) {
     _carrito.removeAt(index);
     notifyListeners();
   }
 
-  // 4. Limpia todo el carrito
+  // --- 4. LIMPIAR CARRITO COMPLETO ---
   void limpiarCarrito() {
     _carrito.clear();
-    _mesaSeleccionada = '';
-    notifyListeners();
+    _mesaIdSeleccionada = null;
+    _mesaNombreSeleccionada = '';
+    _pedidoActivoId = null;
+    
+    _modoMitadYMitad = false;
+    _primeraMitad = null;
+    notifyListeners(); 
   }
 
-  // 5. Envía el pedido a la base de datos a través del repositorio
+  // --- 5. ENVIAR PEDIDO A BASE DE DATOS ---
   Future<bool> enviarPedido() async {
-    if (_mesaSeleccionada.isEmpty || _carrito.isEmpty) {
-      _errorMessage = 'Faltan datos para enviar el pedido (mesa o productos)';
+    if (_isLoading) return false;
+    
+    // Validamos que exista un ID de mesa seleccionado
+    if (_mesaIdSeleccionada == null || _carrito.isEmpty) {
+      _errorMessage = 'Faltan datos para enviar el pedido';
       notifyListeners();
       return false;
     }
@@ -91,14 +133,14 @@ class PedidosProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Usamos tu función crearPedido pasándole los datos exactos que requiere el repositorio
       await _pedidosRepository.crearPedido(
-        _mesaSeleccionada,
+        _mesaIdSeleccionada!, // Enviamos el int a la base de datos
         totalPedido,
         _carrito,
+        pedidoIdExistente: _pedidoActivoId,
       );
-      
-      limpiarCarrito(); // Vaciamos el carrito tras el éxito
+
+      limpiarCarrito();
       return true;
     } catch (e) {
       _errorMessage = 'Error al enviar el pedido: $e';

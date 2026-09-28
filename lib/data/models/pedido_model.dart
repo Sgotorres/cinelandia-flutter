@@ -1,15 +1,15 @@
-// lib/data/models/pedido_model.dart
-
 class PedidoModel {
   final int? id;
-  final String mesa;
+  final int mesaId;
+  final String? mesaNombre; // Opcional, para cuando traigamos el JOIN
   final double total;
   final String? estado;
   final String? fecha;
 
   PedidoModel({
-    this.id, // Opcional al crear, ya que Supabase lo genera automáticamente
-    required this.mesa,
+    this.id,
+    required this.mesaId,
+    this.mesaNombre,
     required this.total,
     this.estado,
     this.fecha,
@@ -18,8 +18,8 @@ class PedidoModel {
   factory PedidoModel.fromJson(Map<String, dynamic> json) {
     return PedidoModel(
       id: json['id'],
-      mesa: json['mesa'] ?? '',
-      // Se asegura de convertir enteros o decimales de Supabase a double
+      mesaId: json['mesa_id'] ?? 0,
+      mesaNombre: json['mesas'] != null ? json['mesas']['nombre'] : null,
       total: (json['total'] as num).toDouble(),
       estado: json['estado'] ?? 'pendiente',
       fecha: json['fecha'],
@@ -29,7 +29,7 @@ class PedidoModel {
   Map<String, dynamic> toJson() {
     return {
       if (id != null) 'id': id,
-      'mesa': mesa,
+      'mesa_id': mesaId,
       'total': total,
       if (estado != null) 'estado': estado,
       if (fecha != null) 'fecha': fecha,
