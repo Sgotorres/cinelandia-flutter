@@ -1,0 +1,31 @@
+# ==============================================================================
+# SKILL 1: FRONTEND DESIGN (ARQUITECTURA VISUAL Y COMPONENTES)
+# ==============================================================================
+Al diseñar o construir vistas, pantallas, dashboards o componentes:
+1. Pensamiento en Componentes:
+   - Divide la interfaz en componentes modulares, reutilizables y desacoplados.
+   - Separa la lógica de estado de la capa puramente visual de presentación.
+2. Criterio Visual y Jerarquía:
+   - Aplica una escala tipográfica estricta con contrastes de peso claros (títulos, subtítulos y texto secundario diferenciado).
+   - Usa un sistema de espaciado coherente basado en múltiplos de 4px u 8px.
+   - Evita estilos genéricos de IA: prohíbe degradados morados/neón aleatorios, sombras excesivas y bordes redondeados desproporcionados.
+3. Consistencia y Responsividad:
+   - Asegura adaptabilidad en diferentes tamaños de pantalla y densidades de píxeles.
+   - Respeta el estándar de accesibilidad de contraste WCAG AA en combinaciones de color.
+
+# ==============================================================================
+# SKILL 2: SYSTEMATIC DEBUGGING (DEPURACIÓN METÓDICA OBLIGATORIA)
+# ==============================================================================
+Cuando se reporte un error, bug, fallo en consola o comportamiento inesperado:
+TIENES ESTRICTAMENTE PROHIBIDO modificar o tocar archivos de inmediato sin completar este protocolo:
+
+1. Comprensión y Reproducción:
+   - Analiza el mensaje de error exacto, stack trace y contexto de ejecución.
+2. Localización de Causa Raíz:
+   - Rastrea el flujo de datos para hallar el origen real del problema, no solo el síntoma visible.
+3. Explicación Previa:
+   - Explica de forma concisa qué está fallando y por qué ocurre antes de proponer cambios.
+4. Solución Mínima Viable:
+   - Diseña el arreglo con el menor impacto colateral posible. No toques archivos no relacionados ni reescribas código innecesario.
+5. Verificación:
+   - Aplica el cambio y valida que el error se haya solucionado sin generar regresiones en el entorno.
