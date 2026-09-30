@@ -1,7 +1,9 @@
+// lib/presentation/mesero/widgets/mesa_card.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart'; // 1. Agregamos la importación de go_router
 import '../../../providers/pedidos_provider.dart';
-import '../screens/tomar_pedido_screen.dart';
+// Eliminamos la importación de TomarPedidoScreen
 
 class MesaCard extends StatelessWidget {
   final int mesaId;
@@ -33,7 +35,8 @@ class MesaCard extends StatelessWidget {
             ? provider.seleccionarMesa(mesaId, mesaNombre, pedidoId: pedidoActivo!['id'])
             : provider.seleccionarMesa(mesaId, mesaNombre);
 
-        Navigator.push(context, MaterialPageRoute(builder: (_) => const TomarPedidoScreen()));
+        // 2. Reemplazamos Navigator.push por la navegación declarativa
+        context.push('/mesero/tomar-pedido');
       },
       child: Container(
         decoration: BoxDecoration(

@@ -1,5 +1,6 @@
 // lib/presentation/mesero/widgets/resumen_bottom_bar.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // 1. Importamos go_router
 import '../../../providers/pedidos_provider.dart';
 
 class ResumenBottomBar extends StatelessWidget {
@@ -49,7 +50,8 @@ class ResumenBottomBar extends StatelessWidget {
                               backgroundColor: Colors.green
                             ),
                           );
-                          Navigator.of(context).popUntil((route) => route.isFirst);
+                          // 2. Reemplazamos el popUntil por context.go para volver al home
+                          context.go('/mesero'); 
                         } else if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

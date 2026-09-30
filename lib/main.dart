@@ -7,7 +7,10 @@ import 'package:provider/provider.dart';
 import 'providers/menu_provider.dart';
 import 'providers/pedidos_provider.dart'; 
 import 'presentation/mesero/screens/mesero_home_screen.dart'; // Añadida la importación de la pantalla del mesero
-
+import 'data/repositories/pedidos_repository.dart';
+import 'domain/usecases/calcular_precio_item_usecase.dart';
+import 'domain/usecases/gestionar_carrito_usecase.dart';
+import 'domain/usecases/tomar_pedido_usecase.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -24,8 +27,20 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => MenuProvider()..cargarMenu()),
-        // Es recomendable registrar tu PedidosProvider de una vez
-        ChangeNotifierProvider(create: (_) => PedidosProvider()), 
+        
+        ChangeNotifierProvider(create: (_) {
+          // 1. Instanciar la capa de datos (Repositorio)
+          final pedidosRepository = PedidosRepository();
+          
+          // 2. Instanciar los casos de uso inyectando sus respectivas dependencias
+          final tomarPedidoUseCase = TomarPedidoUseCase(pedidosRepository);
+          
+          final calcularPrecioUseCase = CalcularPrecioItemUseCase();
+          final gestionarCarritoUseCase = GestionarCarritoUseCase(calcularPrecioUseCase);
+          
+          // 3. Retornar el Provider inyectándole los casos de uso ya construidos
+          return PedidosProvider(tomarPedidoUseCase, gestionarCarritoUseCase);
+        }),
       ],
       child: const MyApp(),
     ),

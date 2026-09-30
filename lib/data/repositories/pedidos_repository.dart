@@ -3,7 +3,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/pedido_detalle_model.dart';
 
 class PedidosRepository {
-  final _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
+
+  // Inyectamos el cliente de Supabase
+  PedidosRepository({SupabaseClient? supabaseClient}) 
+      : _supabase = supabaseClient ?? Supabase.instance.client;
+      
+  // ... resto de tu código sin cambios
 
   /// Crea un nuevo pedido o añade productos a uno existente
   Future<int> crearPedido(

@@ -1,8 +1,9 @@
 // lib/presentation/mesero/widgets/orden_bottom_bar.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart'; // 1. Agregamos la importación de go_router
 import '../../../providers/pedidos_provider.dart';
-import '../screens/resumen_pedido_screen.dart';
+// Eliminamos la importación de ResumenPedidoScreen
 
 class OrdenBottomBar extends StatelessWidget {
   const OrdenBottomBar({super.key});
@@ -46,10 +47,8 @@ class OrdenBottomBar extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ResumenPedidoScreen()),
-                );
+                // 2. Reemplazamos Navigator.push por la navegación declarativa
+                context.push('/mesero/resumen-pedido');
               },
               child: const Text('Ver Resumen', style: TextStyle(fontSize: 16, color: Colors.white)),
             ),

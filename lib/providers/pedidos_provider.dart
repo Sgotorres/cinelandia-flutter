@@ -2,46 +2,46 @@
 import 'package:flutter/material.dart';
 import '../data/models/pedido_detalle_model.dart';
 import '../data/models/producto_model.dart';
-import '../data/repositories/pedidos_repository.dart';
+import '../domain/usecases/gestionar_carrito_usecase.dart';
+import '../domain/usecases/tomar_pedido_usecase.dart';
 
 class PedidosProvider extends ChangeNotifier {
-  final PedidosRepository _pedidosRepository = PedidosRepository();
+  final TomarPedidoUseCase _tomarPedidoUseCase;
+  final GestionarCarritoUseCase _gestionarCarritoUseCase;
 
-  // Guardamos el ID para la base de datos y el Nombre para mostrar en la interfaz
+  PedidosProvider(this._tomarPedidoUseCase, this._gestionarCarritoUseCase);
+
+  // Estado puro de UI
   int? _mesaIdSeleccionada;
-  String _mesaNombreSeleccionada = ''; 
+  String _mesaNombreSeleccionada = '';
+  int? _pedidoActivoId;
   
   List<PedidoDetalleModel> _carrito = [];
   bool _isLoading = false;
   String _errorMessage = '';
 
-  // Variables para controlar el estado de "Mitad y Mitad"
-  bool _modoMitadYMitad = false;
-  ProductoModel? _primeraMitad;
-
-  int? _pedidoActivoId;
-
-  // Getters generales
+  // Getters
   int? get mesaIdSeleccionada => _mesaIdSeleccionada;
-  String get mesaNombreSeleccionada => _mesaNombreSeleccionada; 
+  String get mesaNombreSeleccionada => _mesaNombreSeleccionada;
+  int? get pedidoActivoId => _pedidoActivoId;
   List<PedidoDetalleModel> get carrito => _carrito;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
-  int? get pedidoActivoId => _pedidoActivoId;
+  
+  double get totalPedido => _gestionarCarritoUseCase.calcularTotal(_carrito);
 
-  // Getters para Mitad y Mitad
+  // --- LÓGICA DE MITAD Y MITAD FALTANTE ---
+  bool _modoMitadYMitad = false;
+  ProductoModel? _primeraMitad;
+
   bool get modoMitadYMitad => _modoMitadYMitad;
   ProductoModel? get primeraMitad => _primeraMitad;
 
-  // Calcula el total dinámicamente
-  double get totalPedido {
-    return _carrito.fold(0, (total, item) => total + (item.precioUnitario * item.cantidad));
-  }
-
-  // --- MÉTODOS PARA CONTROLAR MITAD Y MITAD ---
   void toggleModoMitad(bool valor) {
     _modoMitadYMitad = valor;
-    if (!valor) _primeraMitad = null;
+    if (!valor) {
+      _primeraMitad = null; // Si se apaga el switch, limpiamos la selección
+    }
     notifyListeners();
   }
 
@@ -56,94 +56,65 @@ class PedidosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --- 1. SELECCIONAR MESA ---
-  // Ahora recibe el ID numérico (int) para BD y el nombre (String) para la UI
+  // Selección de mesa
   void seleccionarMesa(int mesaId, String mesaNombre, {int? pedidoId}) {
     if (_mesaIdSeleccionada != null && _mesaIdSeleccionada != mesaId) {
       _carrito.clear();
-      _modoMitadYMitad = false;
-      _primeraMitad = null;
     }
     _mesaIdSeleccionada = mesaId;
     _mesaNombreSeleccionada = mesaNombre;
-    _pedidoActivoId = pedidoId; 
+    _pedidoActivoId = pedidoId;
     notifyListeners();
   }
 
-  // --- 2. AGREGAR AL CARRITO ---
+  // Delegar operaciones del carrito al Caso de Uso
   void agregarAlCarrito({
     required ProductoModel producto1,
-    ProductoModel? producto2, 
+    ProductoModel? producto2,
     required int cantidad,
     required String talla,
   }) {
-    double precioUnitario = 0;
-    double precioP1 = (talla == 'Familiar') ? (producto1.precioF ?? 0) : (producto1.precioG ?? 0);
-    
-    if (producto2 != null) {
-      double precioP2 = (talla == 'Familiar') ? (producto2.precioF ?? 0) : (producto2.precioG ?? 0);
-      precioUnitario = precioP1 > precioP2 ? precioP1 : precioP2;
-    } else {
-      precioUnitario = precioP1 > 0 ? precioP1 : (producto1.precio ?? 0);
-    }
-
-    final detalle = PedidoDetalleModel(
-      productoId: producto1.id,
-      producto2Id: producto2?.id,
+    _carrito = _gestionarCarritoUseCase.agregarItem(
+      carritoActual: _carrito,
+      producto1: producto1,
+      producto2: producto2,
       cantidad: cantidad,
-      precioUnitario: precioUnitario,
       talla: talla,
     );
-
-    _carrito.add(detalle);
     notifyListeners();
   }
 
-  // --- 3. REMOVER DEL CARRITO ---
   void removerDelCarrito(int index) {
-    _carrito.removeAt(index);
+    _carrito = _gestionarCarritoUseCase.removerItem(_carrito, index);
     notifyListeners();
   }
 
-  // --- 4. LIMPIAR CARRITO COMPLETO ---
   void limpiarCarrito() {
     _carrito.clear();
     _mesaIdSeleccionada = null;
     _mesaNombreSeleccionada = '';
     _pedidoActivoId = null;
-    
-    _modoMitadYMitad = false;
-    _primeraMitad = null;
-    notifyListeners(); 
+    notifyListeners();
   }
 
-  // --- 5. ENVIAR PEDIDO A BASE DE DATOS ---
+  // Enviar pedido delegando al UseCase
   Future<bool> enviarPedido() async {
     if (_isLoading) return false;
-    
-    // Validamos que exista un ID de mesa seleccionado
-    if (_mesaIdSeleccionada == null || _carrito.isEmpty) {
-      _errorMessage = 'Faltan datos para enviar el pedido';
-      notifyListeners();
-      return false;
-    }
-
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
 
     try {
-      await _pedidosRepository.crearPedido(
-        _mesaIdSeleccionada!, // Enviamos el int a la base de datos
-        totalPedido,
-        _carrito,
-        pedidoIdExistente: _pedidoActivoId,
+      await _tomarPedidoUseCase.execute(
+        mesaId: _mesaIdSeleccionada,
+        carrito: _carrito,
+        total: totalPedido,
+        pedidoActivoId: _pedidoActivoId,
       );
-
       limpiarCarrito();
       return true;
     } catch (e) {
-      _errorMessage = 'Error al enviar el pedido: $e';
+      _errorMessage = e.toString().replaceAll('Exception: ', '');
       return false;
     } finally {
       _isLoading = false;
