@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../widgets/comanda_detalles_modal.dart'; // Importación del nuevo modal
 
 class ComandasScreen extends StatefulWidget {
@@ -32,7 +33,7 @@ class _ComandasScreenState extends State<ComandasScreen> {
           .single();
       return response['nombre'] as String;
     } catch (e) {
-      return 'Mesa $mesaId'; 
+      return 'Mesa $mesaId';
     }
   }
 
@@ -43,21 +44,34 @@ class _ComandasScreenState extends State<ComandasScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        title: const Text('Comandas Activas', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Comandas Activas',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
       ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _pedidosStream,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(
-              child: Text('Error de Supabase: ${snapshot.error}', style: const TextStyle(color: Colors.red)),
+              child: Text(
+                'Error de Supabase: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
             );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.indigo));
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.indigo),
+            );
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No hay comandas activas', style: TextStyle(fontSize: 18, color: Colors.grey)));
+            return const Center(
+              child: Text(
+                'No hay comandas activas',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            );
           }
 
           final pedidos = snapshot.data!;
@@ -73,10 +87,14 @@ class _ComandasScreenState extends State<ComandasScreen> {
               final pedidoId = pedido['id'];
 
               Color colorEstado = Colors.grey;
-              if (estado == 'pendiente') colorEstado = Colors.orange;
-              else if (estado == 'horno') colorEstado = Colors.blue;
-              else if (estado == 'comiendo') colorEstado = Colors.purple;
-              else if (estado == 'lista') colorEstado = Colors.greenAccent.shade700;
+              if (estado == 'pendiente')
+                colorEstado = Colors.orange;
+              else if (estado == 'horno')
+                colorEstado = Colors.blue;
+              else if (estado == 'comiendo')
+                colorEstado = Colors.purple;
+              else if (estado == 'lista')
+                colorEstado = Colors.greenAccent.shade700;
 
               return FutureBuilder<String>(
                 future: _obtenerNombreMesa(mesaId),
@@ -85,7 +103,9 @@ class _ComandasScreenState extends State<ComandasScreen> {
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     elevation: 2,
                     child: ListTile(
                       contentPadding: const EdgeInsets.all(16),
@@ -93,17 +113,36 @@ class _ComandasScreenState extends State<ComandasScreen> {
                         backgroundColor: colorEstado.withOpacity(0.2),
                         child: Icon(Icons.receipt_long, color: colorEstado),
                       ),
-                      title: Text(nombreMesa, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      title: Text(
+                        nombreMesa,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: 4.0),
-                        child: Text('Total: \$${total.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w500)),
+                        child: Text(
+                          'Total: \$${total.toStringAsFixed(2)}',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
                       ),
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(color: colorEstado, borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorEstado,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Text(
                           estado.toUpperCase(),
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       onTap: () {
@@ -120,7 +159,7 @@ class _ComandasScreenState extends State<ComandasScreen> {
                       },
                     ),
                   );
-                }
+                },
               );
             },
           );

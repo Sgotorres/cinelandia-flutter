@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart'; // 1. Agregamos la importación de go_router
+
 import '../../../providers/pedidos_provider.dart';
+
 // Eliminamos la importación de TomarPedidoScreen
 
 class MesaCard extends StatelessWidget {
@@ -10,15 +12,25 @@ class MesaCard extends StatelessWidget {
   final String mesaNombre;
   final Map<String, dynamic>? pedidoActivo;
 
-  const MesaCard({super.key, required this.mesaId, required this.mesaNombre, this.pedidoActivo});
+  const MesaCard({
+    super.key,
+    required this.mesaId,
+    required this.mesaNombre,
+    this.pedidoActivo,
+  });
 
   Color _getColor(String estado) {
     switch (estado.toLowerCase()) {
-      case 'pendiente': return Colors.orange;
-      case 'horno': return Colors.blue;
-      case 'comiendo': return Colors.purple;
-      case 'lista': return Colors.greenAccent.shade700;
-      default: return Colors.green; // Disponible
+      case 'pendiente':
+        return Colors.orange;
+      case 'horno':
+        return Colors.blue;
+      case 'comiendo':
+        return Colors.purple;
+      case 'lista':
+        return Colors.greenAccent.shade700;
+      default:
+        return Colors.green; // Disponible
     }
   }
 
@@ -31,8 +43,12 @@ class MesaCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(16),
       onTap: () {
         final provider = context.read<PedidosProvider>();
-        pedidoActivo != null 
-            ? provider.seleccionarMesa(mesaId, mesaNombre, pedidoId: pedidoActivo!['id'])
+        pedidoActivo != null
+            ? provider.seleccionarMesa(
+                mesaId,
+                mesaNombre,
+                pedidoId: pedidoActivo!['id'],
+              )
             : provider.seleccionarMesa(mesaId, mesaNombre);
 
         // 2. Reemplazamos Navigator.push por la navegación declarativa
@@ -40,18 +56,51 @@ class MesaCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white, borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Container(height: 6, decoration: BoxDecoration(color: color, borderRadius: const BorderRadius.vertical(top: Radius.circular(16)))),
+            Container(
+              height: 6,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+              ),
+            ),
             const Spacer(),
-            Icon(Icons.restaurant, size: 32, color: estado == 'Disponible' ? Colors.grey : color),
+            Icon(
+              Icons.restaurant,
+              size: 32,
+              color: estado == 'Disponible' ? Colors.grey : color,
+            ),
             const SizedBox(height: 8),
-            Text(mesaNombre, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
-            Text(estado.toUpperCase(), style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.bold)),
+            Text(
+              mesaNombre,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            Text(
+              estado.toUpperCase(),
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const Spacer(),
           ],
         ),
