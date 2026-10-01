@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../providers/auth_provider.dart';
-import 'admin_pedidos_screen.dart'; // Importamos la nueva pantalla
 
+// IMPORTACIONES DE TUS PANTALLAS (Aquí faltaba el admin_menu_screen)
+import 'admin_pedidos_screen.dart';
 import 'admin_caja_screen.dart';
+import 'admin_menu_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -36,15 +38,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: [
-          const AdminPedidosScreen(), // 1. Monitor de Comandas (El que acabamos de crear)
-          const AdminCajaScreen(), // 2. Panel de Caja (AQUÍ PONEMOS LA NUEVA PANTALLA)
-          const Center(
-            child: Text('Caja en construcción...'),
-          ), // 2. Próximo apartado
-          const Center(
-            child: Text('Menú y Mesas en construcción...'),
-          ), // 3. Próximo apartado
+        children: const [
+          AdminPedidosScreen(), // Índice 0: Cocina
+          AdminCajaScreen(), // Índice 1: Caja
+          AdminMenuScreen(), // Índice 2: Gestión
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
