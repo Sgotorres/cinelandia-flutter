@@ -11,10 +11,17 @@ class AdminPedidosScreen extends StatefulWidget {
 
 class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
   late final Stream<List<Map<String, dynamic>>> _pedidosStream;
+  
+  // 1. Declaramos el caché en memoria para guardar las mesas
+  Map<int, String> _mesasCache = {};
 
   @override
   void initState() {
     super.initState();
+    
+    // 2. Cargamos todas las mesas UNA SOLA VEZ
+    _cargarMesas();
+
     // Esta consulta es "en vivo". Si un pedido pasa a 'pagado',
     // Supabase lo saca de este flujo automáticamente.
     _pedidosStream = Supabase.instance.client
@@ -25,16 +32,25 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
         .order('fecha', ascending: true);
   }
 
-  Future<String> _obtenerNombreMesa(int mesaId) async {
+  // 3. Nuevo método que descarga las mesas y las guarda en el diccionario
+  Future<void> _cargarMesas() async {
     try {
       final response = await Supabase.instance.client
           .from('mesas')
-          .select('nombre')
-          .eq('id', mesaId)
-          .single();
-      return response['nombre'] as String;
+          .select('id, nombre');
+      
+      final cacheTemporal = <int, String>{};
+      for (var mesa in response) {
+        cacheTemporal[mesa['id'] as int] = mesa['nombre'] as String;
+      }
+      
+      if (mounted) {
+        setState(() {
+          _mesasCache = cacheTemporal;
+        });
+      }
     } catch (e) {
-      return 'Mesa $mesaId';
+      debugPrint('Error cargando mesas: $e');
     }
   }
 
@@ -125,8 +141,9 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _pedidosStream,
         builder: (context, snapshot) {
-          if (snapshot.hasError)
+          if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
+          }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -151,80 +168,77 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
               final pedidoId = pedido['id'];
 
               Color colorBorde = Colors.grey;
-              if (estado == 'pendiente')
+              if (estado == 'pendiente') {
                 colorBorde = Colors.orange;
-              else if (estado == 'horno')
+              } else if (estado == 'horno') {
                 colorBorde = Colors.blue;
-              else if (estado == 'lista')
+              } else if (estado == 'lista') {
                 colorBorde = Colors.greenAccent.shade700;
-              else if (estado == 'comiendo')
+              } else if (estado == 'comiendo') {
                 colorBorde = Colors.purple;
+              }
 
-              return FutureBuilder<String>(
-                future: _obtenerNombreMesa(mesaId),
-                builder: (context, mesaSnapshot) {
-                  final nombreMesa = mesaSnapshot.data ?? 'Cargando...';
+              // 4. Eliminamos el FutureBuilder. Leemos el nombre directamente de la memoria RAM
+              final nombreMesa = _mesasCache[mesaId] ?? 'Mesa $mesaId';
 
-                  return Card(
-                    elevation: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: colorBorde, width: 2),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+              return Card(
+                elevation: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: colorBorde, width: 2),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                nombreMesa,
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorBorde.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  estado.toUpperCase(),
-                                  style: TextStyle(
-                                    color: colorBorde,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Divider(height: 24),
                           Text(
-                            'Pedido #$pedidoId',
+                            nombreMesa,
                             style: const TextStyle(
-                              color: Colors.grey,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: _buildBotonAccion(estado, pedidoId),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorBorde.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              estado.toUpperCase(),
+                              style: TextStyle(
+                                color: colorBorde,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  );
-                },
+                      const Divider(height: 24),
+                      Text(
+                        'Pedido #$pedidoId',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: _buildBotonAccion(estado, pedidoId),
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           );

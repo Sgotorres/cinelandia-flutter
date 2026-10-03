@@ -11,6 +11,20 @@ class MenuRepository {
   MenuRepository({SupabaseClient? supabaseClient}) 
       : _supabase = supabaseClient ?? Supabase.instance.client;
 
+// NUEVO MÉTODO CON STREAM
+  Stream<List<ProductoModel>> obtenerMenuStream() {
+    return _supabase
+        .from('productos')
+        .stream(primaryKey: ['id'])
+        .order('categoria', ascending: true) // Ordenamos por categoría para mejor UI
+        .map((listaDatos) => listaDatos
+            .map((item) => ProductoModel.fromJson(item))
+            .toList());
+  }
+
+  // Puedes conservar tu método obtenerMenu() si aún lo necesitas 
+  // para otra lógica (ej. una carga estática inicial), 
+  // o puedes eliminarlo si todo migrará a Streams.
   Future<Result<List<ProductoModel>, Failure>> obtenerMenu() async {
     try {
       final response = await _supabase
@@ -29,6 +43,4 @@ class MenuRepository {
       return Error(const ServerFailure('Ocurrió un error inesperado al cargar el menú'));
     }
   }
-
-  // (Mantén tus otros métodos actualizarProducto y crearProducto aquí abajo...)
 }

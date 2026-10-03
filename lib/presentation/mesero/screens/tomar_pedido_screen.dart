@@ -24,7 +24,7 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final menuProvider = context.read<MenuProvider>();
       if (menuProvider.productos.isEmpty) {
-        menuProvider.cargarMenu();
+        menuProvider.escucharMenu();
       }
     });
   }

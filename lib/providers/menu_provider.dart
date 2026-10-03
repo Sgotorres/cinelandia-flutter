@@ -1,3 +1,5 @@
+// lib/providers/menu_provider.dart
+import 'dart:async'; // <-- IMPORTANTE: Necesario para StreamSubscription
 import 'package:flutter/material.dart';
 import '../core/utils/result.dart';
 import '../data/models/producto_model.dart';
@@ -6,7 +8,9 @@ import '../data/repositories/menu_repository.dart';
 class MenuProvider extends ChangeNotifier {
   final MenuRepository _menuRepository;
   
-  // Inyección de dependencias: usamos el mock en tests, o el real en la app
+  // Guardamos la suscripción para poder cancelarla y evitar fugas de memoria
+  StreamSubscription<List<ProductoModel>>? _menuSubscription;
+
   MenuProvider({MenuRepository? menuRepository}) 
       : _menuRepository = menuRepository ?? MenuRepository();
 
@@ -22,21 +26,32 @@ class MenuProvider extends ChangeNotifier {
     return _productos.where((p) => p.categoria.toLowerCase() == categoria.toLowerCase()).toList();
   }
 
-  Future<void> cargarMenu() async {
+  // MÉTODO NUEVO QUE REEMPLAZA A cargarMenu()
+  void escucharMenu() {
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
 
-    final result = await _menuRepository.obtenerMenu();
-
-    switch (result) {
-      case Success(value: final productosCargados):
+    // Nos suscribimos al Stream del repositorio
+    _menuSubscription = _menuRepository.obtenerMenuStream().listen(
+      (productosCargados) {
         _productos = productosCargados;
+        _isLoading = false;
         _errorMessage = '';
-      case Error(failure: final fallo):
-        _errorMessage = fallo.message;
-    }
-    _isLoading = false;
-    notifyListeners();
+        notifyListeners(); // Actualiza la UI de todos los meseros al instante
+      },
+      onError: (error) {
+        _isLoading = false;
+        _errorMessage = 'Error de conexión en tiempo real: $error';
+        notifyListeners();
+      },
+    );
+  }
+
+  // MÉTODO NUEVO PARA LIMPIAR LA MEMORIA
+  @override
+  void dispose() {
+    _menuSubscription?.cancel();
+    super.dispose();
   }
 }

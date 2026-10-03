@@ -19,8 +19,9 @@ class _VistaMesasState extends State<VistaMesas> {
     super.initState();
     final supabase = Supabase.instance.client;
     _mesasStream = supabase.from('mesas').stream(primaryKey: ['id']).order('orden');
-    _pedidosStream = supabase.from('pedidos').stream(primaryKey: ['id'])
-        .neq('estado', 'pagado').neq('estado', 'cancelada');
+
+    // Escuchamos la tabla sin encadenar filtros inválidos
+    _pedidosStream = supabase.from('pedidos').stream(primaryKey: ['id']);
   }
 
   @override
@@ -43,10 +44,16 @@ class _VistaMesasState extends State<VistaMesas> {
                 final mesasActivas = (mesasSnap.data ?? []).where((m) => m['activa'] == true).toList();
                 if (mesasActivas.isEmpty) return const Center(child: Text('No hay mesas activas.'));
 
-                return StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: _pedidosStream,
-                  builder: (context, pedidosSnap) {
-                    final pedidosActivos = pedidosSnap.data ?? [];
+                  return StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: _pedidosStream,
+                    builder: (context, pedidosSnap) {
+                      final todosLosPedidos = pedidosSnap.data ?? [];
+                      
+                      // Filtramos en memoria: solo pedidos que NO estén pagados ni cancelados
+                      final pedidosActivos = todosLosPedidos.where((p) {
+                        final estado = p['estado']?.toString().toLowerCase();
+                        return estado != 'pagado' && estado != 'cancelada';
+                      }).toList();
                     
                     return GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -54,19 +61,18 @@ class _VistaMesasState extends State<VistaMesas> {
                       ),
                       itemCount: mesasActivas.length,
                       itemBuilder: (context, i) {
-                        final mesa = mesasActivas[i];
-                        // .firstOrNull nos ahorra el if/else tradicional
-                        final pedido = pedidosActivos.where((p) => p['mesa_id'] == mesa['id']).firstOrNull;
-                        
-                        return MesaCard( // La UI pesada está aquí
-                          mesaId: mesa['id'], 
-                          mesaNombre: mesa['nombre'], 
-                          pedidoActivo: pedido,
-                        );
-                      },
-                    );
-                  },
-                );
+                              final mesa = mesasActivas[i];
+                              final pedido = pedidosActivos.where((p) => p['mesa_id'] == mesa['id']).firstOrNull;
+                              
+                              return MesaCard(
+                                mesaId: mesa['id'], 
+                                mesaNombre: mesa['nombre'], 
+                                pedidoActivo: pedido,
+                              );
+                            },
+                          );
+                        },
+                  );
               },
             ),
           ),

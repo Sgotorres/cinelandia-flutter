@@ -35,7 +35,7 @@ void main() async {
       providers: [
         // 3. Inyectamos AuthProvider para que el router y el login funcionen
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => MenuProvider()..cargarMenu()),
+        ChangeNotifierProvider(create: (_) => MenuProvider()..escucharMenu()),
 
         ChangeNotifierProvider(
           create: (_) {
