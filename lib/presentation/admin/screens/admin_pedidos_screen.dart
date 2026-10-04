@@ -22,13 +22,11 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
     // 2. Cargamos todas las mesas UNA SOLA VEZ
     _cargarMesas();
 
-    // Esta consulta es "en vivo". Si un pedido pasa a 'pagado',
-    // Supabase lo saca de este flujo automáticamente.
+    // SOLUCIÓN: Quitamos los filtros .neq() de la consulta de Supabase.
+    // Escuchamos absolutamente todos los cambios en la tabla pedidos en tiempo real.
     _pedidosStream = Supabase.instance.client
         .from('pedidos')
         .stream(primaryKey: ['id'])
-        .neq('estado', 'pagado')
-        .neq('estado', 'cancelada')
         .order('fecha', ascending: true);
   }
 
@@ -67,7 +65,7 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
         nuevoEstado = 'comiendo';
         break;
       case 'comiendo':
-        nuevoEstado = 'pagado'; // <-- Al cambiar a esto, el Stream lo expulsa de la pantalla.
+        nuevoEstado = 'pagado'; // <-- Cambia a pagado en BD. El Stream general nos avisará del cambio.
         break;
       default:
         return;
@@ -147,7 +145,20 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          
+          // Extraemos todos los datos que llegaron del Stream
+          final todosLosPedidos = snapshot.data ?? [];
+
+          // SOLUCIÓN: Filtramos en memoria (Dart) para excluir los pagados y cancelados.
+          // Como quitamos el .neq() de la consulta, ahora esta lista reaccionará al instante
+          // cuando un estado cambie a "pagado", descartándolo de la UI limpia y eficientemente.
+          final pedidosActivos = todosLosPedidos.where((p) {
+            final estado = p['estado']?.toString().toLowerCase();
+            return estado != 'pagado' && estado != 'cancelada';
+          }).toList();
+
+          // Verificamos si la lista filtrada quedó vacía
+          if (pedidosActivos.isEmpty) {
             return const Center(
               child: Text(
                 'No hay pedidos activos en este momento.',
@@ -156,13 +167,11 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
             );
           }
 
-          final pedidos = snapshot.data!;
-
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: pedidos.length,
+            itemCount: pedidosActivos.length, // Usamos la lista filtrada
             itemBuilder: (context, index) {
-              final pedido = pedidos[index];
+              final pedido = pedidosActivos[index]; // Usamos la lista filtrada
               final estado = pedido['estado'] ?? 'pendiente';
               final mesaId = pedido['mesa_id'] as int;
               final pedidoId = pedido['id'];
@@ -178,7 +187,7 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
                 colorBorde = Colors.purple;
               }
 
-              // 4. Eliminamos el FutureBuilder. Leemos el nombre directamente de la memoria RAM
+              // 4. Leemos el nombre directamente de la memoria RAM
               final nombreMesa = _mesasCache[mesaId] ?? 'Mesa $mesaId';
 
               return Card(

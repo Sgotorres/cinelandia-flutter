@@ -1,8 +1,8 @@
 // lib/presentation/admin/screens/admin_menu_screen.dart
 import 'package:flutter/material.dart';
-
 import '../widgets/admin_productos_tab.dart';
 import '../widgets/admin_mesas_tab.dart';
+import '../widgets/admin_usuarios_tab.dart'; // <-- Importamos la nueva pestaña
 
 class AdminMenuScreen extends StatelessWidget {
   const AdminMenuScreen({super.key});
@@ -10,7 +10,7 @@ class AdminMenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3, // <-- Cambiamos de 2 a 3
       child: Column(
         children: [
           const Material(
@@ -20,19 +20,18 @@ class AdminMenuScreen extends StatelessWidget {
               unselectedLabelColor: Colors.grey,
               indicatorColor: Colors.indigo,
               tabs: [
-                Tab(icon: Icon(Icons.fastfood), text: 'Catálogo de Menú'),
-                Tab(
-                  icon: Icon(Icons.table_restaurant),
-                  text: 'Gestión de Mesas',
-                ),
+                Tab(icon: Icon(Icons.fastfood), text: 'Catálogo'),
+                Tab(icon: Icon(Icons.table_restaurant), text: 'Mesas'),
+                Tab(icon: Icon(Icons.people), text: 'Usuarios'), // <-- Nueva pestaña
               ],
             ),
           ),
           Expanded(
             child: TabBarView(
               children: [
-                AdminProductosTab(), // Llama al widget de Productos
-                AdminMesasTab(), // Llama al widget de Mesas
+                const AdminProductosTab(),
+                const AdminMesasTab(),
+                const AdminUsuariosTab(), // <-- Renderizamos el nuevo tab
               ],
             ),
           ),
