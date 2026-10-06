@@ -1,8 +1,8 @@
 // lib/presentation/mesero/screens/mesero_home_screen.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // <-- Importamos provider
+import 'package:provider/provider.dart'; 
 
-import '../../../providers/auth_provider.dart'; // <-- Importamos AuthProvider
+import '../../../providers/auth_provider.dart'; 
 import 'comandas_screen.dart';
 import '../widgets/vista_mesas.dart';
 
@@ -20,15 +20,14 @@ class _MeseroHomeScreenState extends State<MeseroHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: _buildAppBar(),
+      // Pasamos el context como solicitaste
+      appBar: _buildAppBar(context),
       body: IndexedStack(
         index: _selectedIndex,
         children: [
           const VistaMesas(),
           const ComandasScreen(),
-          _buildAjustesTab(
-            context,
-          ), // <-- Reemplazamos el texto temporal por el nuevo Widget
+          _buildAjustesTab(context),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -51,7 +50,7 @@ class _MeseroHomeScreenState extends State<MeseroHomeScreen> {
     );
   }
 
-  // --- NUEVO WIDGET PARA LA PESTAÑA DE OPCIONES ---
+  // --- WIDGET PARA LA PESTAÑA DE OPCIONES ---
   Widget _buildAjustesTab(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(16.0),
@@ -97,92 +96,88 @@ class _MeseroHomeScreenState extends State<MeseroHomeScreen> {
               color: Colors.grey,
             ),
             onTap: () {
-              // Llamamos a la función logout de tu AuthProvider
+              // Llamamos a la función logout del AuthProvider
               context.read<AuthProvider>().logout();
             },
           ),
         ),
-        // Aquí en el futuro puedes agregar más opciones (Ej: Cambiar tema, Ver perfil, etc.)
       ],
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  // --- NUEVO APPBAR INTEGRADO ---
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    // Escuchamos los datos del usuario en tiempo real
+    final authProvider = context.watch<AuthProvider>();
+
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 1,
       title: Row(
         children: [
+          // Ícono del local más estilizado
           Container(
-            width: 36,
-            height: 36,
-            decoration: const BoxDecoration(
-              color: Colors.indigo,
-              shape: BoxShape.circle,
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: const Center(
-              child: Text(
-                'C',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: Icon(Icons.local_pizza, color: Colors.orange, size: 24),
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
-            'Sala Principal',
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 16.0),
-          child: Column(
+          // Textos rediseñados
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const Text(
                 'Pizza Planeta',
                 style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
+                  color: Colors.black87,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                'Mesero: ${authProvider.nombreCompleto}',
+                style: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              Row(
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Activo',
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        // Indicador de conexión a la derecha
+        Padding(
+          padding: const EdgeInsets.only(right: 16.0),
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              const Text(
+                'En línea',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.notifications_none, color: Colors.black54),
-          onPressed: () {},
         ),
       ],
     );

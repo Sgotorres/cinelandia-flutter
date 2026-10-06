@@ -1,20 +1,18 @@
 // lib/data/repositories/pedidos_repository.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../models/pedido_detalle_model.dart';
+import '../../core/errors/failures.dart';
+import '../../core/utils/result.dart';
 
 class PedidosRepository {
   final SupabaseClient _supabase;
 
-  // Inyectamos el cliente de Supabase
   PedidosRepository({SupabaseClient? supabaseClient})
     : _supabase = supabaseClient ?? Supabase.instance.client;
 
-  // ... resto de tu código sin cambios
-
   /// Crea un nuevo pedido o añade productos a uno existente
-  Future<int> crearPedido(
-    int mesaId, // <-- Cambiado de String a int
+  Future<Result<int, Failure>> crearPedido(
+    int mesaId,
     double totalNuevosProductos,
     List<PedidoDetalleModel> detalles, {
     int? pedidoIdExistente,
@@ -24,7 +22,6 @@ class PedidosRepository {
     try {
       int pedidoId;
 
-      // 1. Crear nuevo pedido o actualizar el total si ya existe
       if (pedidoIdExistente != null) {
         final pedidoActual = await _supabase
             .from('pedidos')
@@ -42,11 +39,10 @@ class PedidosRepository {
 
         pedidoId = pedidoIdExistente;
       } else {
-        // Se ejecuta una ÚNICA vez para pedidos nuevos
         final pedidoResponse = await _supabase
             .from('pedidos')
             .insert({
-              'mesa_id': mesaId, // <-- Cambiado de 'mesa' a 'mesa_id'
+              'mesa_id': mesaId,
               'total': totalNuevosProductos,
               'estado': 'pendiente',
               'fecha': DateTime.now().toIso8601String(),
@@ -55,10 +51,9 @@ class PedidosRepository {
             .single();
 
         pedidoId = pedidoResponse['id'];
-        pedidoIdCreado = pedidoId; // Guardamos referencia por seguridad
+        pedidoIdCreado = pedidoId; 
       }
 
-      // 2. Insertar los detalles del pedido
       if (detalles.isNotEmpty) {
         final detallesAInsertar = detalles.map((detalle) {
           final json = detalle.toJson();
@@ -69,28 +64,25 @@ class PedidosRepository {
         await _supabase.from('detalles_pedido').insert(detallesAInsertar);
       }
 
-      return pedidoId;
+      return Success(pedidoId);
     } catch (e) {
-      // Manejo de error con Rollback
       if (pedidoIdCreado != null) {
         try {
           await _supabase.from('pedidos').delete().eq('id', pedidoIdCreado);
         } catch (_) {}
       }
-      throw Exception('Fallo al registrar la orden: $e');
+      return Error(ServerFailure('Fallo al registrar la orden: $e'));
     }
   }
 
   /// Elimina un producto de la comanda y actualiza el pedido de forma atómica
-  Future<void> eliminarDetalleYActualizarPedido(
+  Future<Result<bool, Failure>> eliminarDetalleYActualizarPedido(
     int detalleId,
     int pedidoId,
   ) async {
     try {
-      // 1. Borramos el producto específico de los detalles
       await _supabase.from('detalles_pedido').delete().eq('id', detalleId);
 
-      // 2. Verificamos cuántos productos quedan en este pedido
       final response = await _supabase
           .from('detalles_pedido')
           .select('cantidad, precio_unitario')
@@ -99,14 +91,11 @@ class PedidosRepository {
       final itemsRestantes = List<Map<String, dynamic>>.from(response);
 
       if (itemsRestantes.isEmpty) {
-        // 3A. Si era el último producto, cancelamos el pedido automáticamente.
-        // El Stream en MeseroHomeScreen detectará esto y liberará la mesa.
         await _supabase
             .from('pedidos')
             .update({'estado': 'cancelada', 'total': 0.0})
             .eq('id', pedidoId);
       } else {
-        // 3B. Si aún quedan productos, recalculamos el total de la comanda
         double nuevoTotal = 0.0;
         for (var item in itemsRestantes) {
           final int cantidad = item['cantidad'] ?? 1;
@@ -119,10 +108,9 @@ class PedidosRepository {
             .update({'total': nuevoTotal})
             .eq('id', pedidoId);
       }
+      return const Success(true);
     } catch (e) {
-      throw Exception(
-        'Error al eliminar el producto y actualizar la orden: $e',
-      );
+      return Error(ServerFailure('Error al eliminar el producto: $e'));
     }
   }
 }

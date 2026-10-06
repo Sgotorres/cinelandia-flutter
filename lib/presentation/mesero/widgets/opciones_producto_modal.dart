@@ -20,7 +20,7 @@ class OpcionesProductoModal extends StatefulWidget {
 
 class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
   int cantidad = 1;
-  String tallaSeleccionada = 'Grande'; // Por defecto
+  String tallaSeleccionada = 'Mediana';
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +53,15 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
             const Text('Tamaño:', style: TextStyle(fontSize: 18)),
             Row(
               children: [
+                // <-- NUEVO RADIO BUTTON
+                Expanded(
+                  child: RadioListTile<String>(
+                    title: const Text('Mediana'), // o 'Pequeña'
+                    value: 'Mediana',
+                    groupValue: tallaSeleccionada,
+                    onChanged: (val) => setState(() => tallaSeleccionada = val!),
+                  ),
+                ),
                 Expanded(
                   child: RadioListTile<String>(
                     title: const Text('Grande'),

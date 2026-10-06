@@ -8,36 +8,41 @@ class GestionarCarritoUseCase {
 
   GestionarCarritoUseCase(this._calcularPrecioUseCase);
 
-  List<PedidoDetalleModel> agregarItem({
+List<PedidoDetalleModel> agregarItem({
     required List<PedidoDetalleModel> carritoActual,
     required ProductoModel producto1,
     ProductoModel? producto2,
     required int cantidad,
     required String talla,
   }) {
-    // 1. Convertir ProductoModel (Data) a Producto (Domain)
+    // 1. Mapear producto1 a la entidad
     final entidadP1 = Producto(
       id: producto1.id,
       nombre: producto1.nombre,
       precio: producto1.precio,
+      precioM: producto1.precioM,
       precioG: producto1.precioG,
       precioF: producto1.precioF,
+      volumen: producto1.volumen,
       categoria: producto1.categoria,
     );
 
+    // 2. Mapear producto2 si existe (Mitad y Mitad)
     Producto? entidadP2;
     if (producto2 != null) {
       entidadP2 = Producto(
         id: producto2.id,
         nombre: producto2.nombre,
         precio: producto2.precio,
+        precioM: producto2.precioM, // <-- Corregido a producto2 y con coma
         precioG: producto2.precioG,
         precioF: producto2.precioF,
+        volumen: producto2.volumen, // <-- Corregido a producto2
         categoria: producto2.categoria,
       );
     }
 
-    // 2. Ejecutar el caso de uso de precios con las entidades correctas
+    // 3. Calcular precio unitario con la regla de negocio
     final precioUnitario = _calcularPrecioUseCase.execute(
       producto1: entidadP1,
       producto2: entidadP2,
@@ -54,7 +59,7 @@ class GestionarCarritoUseCase {
 
     return List.from(carritoActual)..add(detalle);
   }
-
+  
   List<PedidoDetalleModel> removerItem(List<PedidoDetalleModel> carritoActual, int index) {
     return List.from(carritoActual)..removeAt(index);
   }

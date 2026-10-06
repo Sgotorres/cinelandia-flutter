@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 
 import '../widgets/comanda_detalles_modal.dart'; // Importación del nuevo modal
+import '../../../providers/mesas_provider.dart'; // <-- Importación del nuevo provider
 
 class ComandasScreen extends StatefulWidget {
   const ComandasScreen({super.key});
@@ -13,15 +15,9 @@ class ComandasScreen extends StatefulWidget {
 class _ComandasScreenState extends State<ComandasScreen> {
   late final Stream<List<Map<String, dynamic>>> _pedidosStream;
   
-  // 1. Declaramos el caché en memoria para guardar las mesas
-  Map<int, String> _mesasCache = {};
-
   @override
   void initState() {
     super.initState();
-    
-    // 2. Cargamos todas las mesas UNA SOLA VEZ
-    _cargarMesas();
     
     // Escuchamos el stream SIN encadenar filtros '.neq' para evitar bloqueos
     _pedidosStream = Supabase.instance.client
@@ -30,30 +26,11 @@ class _ComandasScreenState extends State<ComandasScreen> {
         .order('fecha', ascending: false);
   }
 
-  // 3. Nuevo método que descarga las mesas y las guarda en el diccionario
-  Future<void> _cargarMesas() async {
-    try {
-      final response = await Supabase.instance.client
-          .from('mesas')
-          .select('id, nombre');
-      
-      final cacheTemporal = <int, String>{};
-      for (var mesa in response) {
-        cacheTemporal[mesa['id'] as int] = mesa['nombre'] as String;
-      }
-      
-      if (mounted) {
-        setState(() {
-          _mesasCache = cacheTemporal;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error cargando mesas: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Escuchamos el Provider para obtener los nombres de las mesas
+    final mesasCache = context.watch<MesasProvider>().mesasCache;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -119,8 +96,8 @@ class _ComandasScreenState extends State<ComandasScreen> {
                 colorEstado = Colors.greenAccent.shade700;
               }
 
-              // 4. Eliminamos el FutureBuilder. Leemos el nombre directamente de la memoria RAM
-              final nombreMesa = _mesasCache[mesaId] ?? 'Mesa $mesaId';
+              // Leemos el nombre directamente desde la memoria RAM del Provider
+              final nombreMesa = mesasCache[mesaId] ?? 'Mesa $mesaId';
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),

@@ -1,15 +1,15 @@
-// lib/data/models/producto_model.dart
-
 class ProductoModel {
   final int id;
   final String nombre;
   final String? descripcion;
-  final double? precio; // Puede ser null si usas solo precio_g y precio_f
+  final double? precio; 
   final String categoria;
   final bool esRecomendado;
   final bool disponible;
-  final double? precioG; // Precio Grande
-  final double? precioF; // Precio Familiar
+  final double? precioM; // <-- NUEVO
+  final double? precioG; 
+  final double? precioF; 
+  final String? volumen; // <-- NUEVO
 
   ProductoModel({
     required this.id,
@@ -19,8 +19,10 @@ class ProductoModel {
     required this.categoria,
     required this.esRecomendado,
     required this.disponible,
+    this.precioM, // <-- NUEVO
     this.precioG,
     this.precioF,
+    this.volumen, // <-- NUEVO
   });
 
   factory ProductoModel.fromJson(Map<String, dynamic> json) {
@@ -32,8 +34,10 @@ class ProductoModel {
       categoria: json['categoria'] ?? 'General',
       esRecomendado: json['es_recomendado'] ?? false,
       disponible: json['disponible'] ?? true,
+      precioM: json['precio_m'] != null ? (json['precio_m'] as num).toDouble() : null, // <-- NUEVO
       precioG: json['precio_g'] != null ? (json['precio_g'] as num).toDouble() : null,
       precioF: json['precio_f'] != null ? (json['precio_f'] as num).toDouble() : null,
+      volumen: json['volumen'], // <-- NUEVO
     );
   }
 
@@ -45,8 +49,10 @@ class ProductoModel {
       'categoria': categoria,
       'es_recomendado': esRecomendado,
       'disponible': disponible,
+      'precio_m': precioM, // <-- NUEVO
       'precio_g': precioG,
       'precio_f': precioF,
+      'volumen': volumen, // <-- NUEVO
     };
   }
 }

@@ -4,6 +4,8 @@ import '../data/models/pedido_detalle_model.dart';
 import '../data/models/producto_model.dart';
 import '../domain/usecases/gestionar_carrito_usecase.dart';
 import '../domain/usecases/tomar_pedido_usecase.dart';
+import '../core/utils/result.dart'; // <-- Nueva importación
+import '../core/errors/failures.dart'; // <-- Nueva importación
 
 class PedidosProvider extends ChangeNotifier {
   final TomarPedidoUseCase _tomarPedidoUseCase;
@@ -97,28 +99,34 @@ class PedidosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Enviar pedido delegando al UseCase
+  // Enviar pedido delegando al UseCase usando Result/Failure
   Future<bool> enviarPedido() async {
     if (_isLoading) return false;
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
 
-    try {
-      await _tomarPedidoUseCase.execute(
-        mesaId: _mesaIdSeleccionada,
-        carrito: _carrito,
-        total: totalPedido,
-        pedidoActivoId: _pedidoActivoId,
-      );
+    final result = await _tomarPedidoUseCase.execute(
+      mesaId: _mesaIdSeleccionada,
+      carrito: _carrito,
+      total: totalPedido,
+      pedidoActivoId: _pedidoActivoId,
+    );
+
+    _isLoading = false;
+
+    // Evaluamos el resultado usando los tipos Success y Error
+    if (result is Success) {
       limpiarCarrito();
-      return true;
-    } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      return false;
-    } finally {
-      _isLoading = false;
       notifyListeners();
+      return true;
+    } else if (result is Error<bool, Failure>) {
+      _errorMessage = result.failure.message;
+      notifyListeners();
+      return false;
     }
+    
+    notifyListeners();
+    return false;
   }
 }

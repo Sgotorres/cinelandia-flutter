@@ -18,6 +18,8 @@ import 'domain/usecases/calcular_precio_item_usecase.dart';
 import 'domain/usecases/gestionar_carrito_usecase.dart';
 import 'domain/usecases/tomar_pedido_usecase.dart';
 
+import 'providers/mesas_provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -36,7 +38,8 @@ void main() async {
         // 3. Inyectamos AuthProvider para que el router y el login funcionen
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()..escucharMenu()),
-
+        ChangeNotifierProvider(create: (_) => MesasProvider()..cargarMesas()),
+        
         ChangeNotifierProvider(
           create: (_) {
             final pedidosRepository = PedidosRepository();
