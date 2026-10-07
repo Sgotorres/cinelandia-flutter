@@ -1,5 +1,6 @@
 // lib/providers/pedidos_provider.dart
 import 'package:flutter/material.dart';
+
 import '../data/models/pedido_detalle_model.dart';
 import '../data/models/producto_model.dart';
 import '../domain/usecases/gestionar_carrito_usecase.dart';
@@ -17,7 +18,7 @@ class PedidosProvider extends ChangeNotifier {
   int? _mesaIdSeleccionada;
   String _mesaNombreSeleccionada = '';
   int? _pedidoActivoId;
-  
+
   List<PedidoDetalleModel> _carrito = [];
   bool _isLoading = false;
   String _errorMessage = '';
@@ -29,7 +30,7 @@ class PedidosProvider extends ChangeNotifier {
   List<PedidoDetalleModel> get carrito => _carrito;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
-  
+
   double get totalPedido => _gestionarCarritoUseCase.calcularTotal(_carrito);
 
   // --- LÓGICA DE MITAD Y MITAD FALTANTE ---
@@ -115,17 +116,25 @@ class PedidosProvider extends ChangeNotifier {
 
     _isLoading = false;
 
-    // Evaluamos el resultado usando los tipos Success y Error
     if (result is Success) {
       limpiarCarrito();
       notifyListeners();
       return true;
     } else if (result is Error<bool, Failure>) {
+      // Verificamos si es una falla de red (guardado offline exitoso)
+      if (result.failure is NetworkFailure) {
+        // Notificamos el mensaje pero consideramos que el mesero "terminó" su tarea
+        _errorMessage = result.failure.message;
+        limpiarCarrito();
+        notifyListeners();
+        return true;
+      }
+
       _errorMessage = result.failure.message;
       notifyListeners();
       return false;
     }
-    
+
     notifyListeners();
     return false;
   }

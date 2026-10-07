@@ -21,7 +21,7 @@ class _AdminCajaScreenState extends State<AdminCajaScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // Solo inicializamos el stream, ya no descargamos las mesas aquí
     _ventasStream = Supabase.instance.client
         .from('pedidos')
@@ -73,12 +73,15 @@ class _AdminCajaScreenState extends State<AdminCajaScreen> {
                         itemCount: ventas.length,
                         itemBuilder: (context, index) {
                           final venta = ventas[index];
-                          final mesaId = venta['mesa_id'] as int;
-                          
-                          // Leemos el nombre de la mesa directamente desde la caché del Provider
-                          final nombreMesa =
-                              mesasCache[mesaId] ?? 'Mesa $mesaId';
-                              
+
+                          // 1. Nulo permitido
+                          final mesaId = venta['mesa_id'] as int?;
+
+                          // 2. Validamos
+                          final nombreMesa = mesaId != null
+                              ? (mesasCache[mesaId] ?? 'Mesa $mesaId')
+                              : 'Mesa Eliminada';
+
                           return TicketVentaCard(
                             venta: venta,
                             nombreMesa: nombreMesa,

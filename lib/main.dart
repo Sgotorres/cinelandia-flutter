@@ -20,6 +20,8 @@ import 'domain/usecases/tomar_pedido_usecase.dart';
 
 import 'providers/mesas_provider.dart';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -39,7 +41,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()..escucharMenu()),
         ChangeNotifierProvider(create: (_) => MesasProvider()..cargarMesas()),
-        
+
         ChangeNotifierProvider(
           create: (_) {
             final pedidosRepository = PedidosRepository();
@@ -58,17 +60,37 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _pedidosRepository = PedidosRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    // Escuchar cambios de internet globalmente
+    Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
+      if (!results.contains(ConnectivityResult.none)) {
+        // Volvió el internet, intentamos sincronizar
+        debugPrint('Internet restaurado. Sincronizando comandas pendientes...');
+        _pedidosRepository.sincronizarPedidosOffline();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // 4. Cambiamos MaterialApp por MaterialApp.router
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Pizza Planeta',
-      // 5. Asignamos la configuración de go_router
-      routerConfig: AppRouter.router(context),
+      routerConfig: AppRouter.router(context), //[cite: 1]
     );
   }
 }

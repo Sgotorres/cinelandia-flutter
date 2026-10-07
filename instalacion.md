@@ -46,3 +46,9 @@ Debes mantener un archivo llamado `.env` en la raíz del proyecto (al mismo nive
 ```env
 SUPABASE_URL=https://utbqvdbfjymffhzjxdcg.supabase.co
 SUPABASE_ANON_KEY=TU_CLAVE_PUBLICA_AQUI
+
+## 5. evitar errores fantasmas
+
+flutter pub add connectivity_plus shared_preferences
+
+pegar en terminal

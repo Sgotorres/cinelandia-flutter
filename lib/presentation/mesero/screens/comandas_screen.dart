@@ -14,11 +14,11 @@ class ComandasScreen extends StatefulWidget {
 
 class _ComandasScreenState extends State<ComandasScreen> {
   late final Stream<List<Map<String, dynamic>>> _pedidosStream;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     // Escuchamos el stream SIN encadenar filtros '.neq' para evitar bloqueos
     _pedidosStream = Supabase.instance.client
         .from('pedidos')
@@ -77,11 +77,14 @@ class _ComandasScreenState extends State<ComandasScreen> {
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: pedidosActivos.length, 
+            itemCount: pedidosActivos.length,
             itemBuilder: (context, index) {
-              final pedido = pedidosActivos[index]; 
+              final pedido = pedidosActivos[index];
               final estado = pedido['estado'] ?? 'pendiente';
-              final mesaId = pedido['mesa_id'] as int;
+
+              // 1. Aceptamos que mesaId puede ser nulo agregando el signo de interrogación
+              final mesaId = pedido['mesa_id'] as int?;
+
               final total = (pedido['total'] as num).toDouble();
               final pedidoId = pedido['id'];
 
@@ -96,8 +99,10 @@ class _ComandasScreenState extends State<ComandasScreen> {
                 colorEstado = Colors.greenAccent.shade700;
               }
 
-              // Leemos el nombre directamente desde la memoria RAM del Provider
-              final nombreMesa = mesasCache[mesaId] ?? 'Mesa $mesaId';
+              // 2. Si mesaId es nulo, mostramos "Mesa Eliminada"
+              final nombreMesa = mesaId != null
+                  ? (mesasCache[mesaId] ?? 'Mesa $mesaId')
+                  : 'Mesa Eliminada';
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -150,7 +155,7 @@ class _ComandasScreenState extends State<ComandasScreen> {
                       backgroundColor: Colors.transparent,
                       builder: (context) => ComandaDetallesModal(
                         pedidoId: pedidoId,
-                        mesaId: mesaId,
+                        mesaId: mesaId ?? 0,
                         mesaNombre: nombreMesa,
                       ),
                     );

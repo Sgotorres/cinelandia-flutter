@@ -19,7 +19,7 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     _pedidosStream = Supabase.instance.client
         .from('pedidos')
         .stream(primaryKey: ['id'])
@@ -36,9 +36,11 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _pedidosStream,
         builder: (context, snapshot) {
-          if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
-          if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-          
+          if (snapshot.hasError)
+            return Center(child: Text('Error: ${snapshot.error}'));
+          if (snapshot.connectionState == ConnectionState.waiting)
+            return const Center(child: CircularProgressIndicator());
+
           final todosLosPedidos = snapshot.data ?? [];
           final pedidosActivos = todosLosPedidos.where((p) {
             final estado = p['estado']?.toString().toLowerCase();
@@ -47,7 +49,10 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
 
           if (pedidosActivos.isEmpty) {
             return const Center(
-              child: Text('No hay pedidos activos en este momento.', style: TextStyle(fontSize: 18, color: Colors.grey)),
+              child: Text(
+                'No hay pedidos activos en este momento.',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
             );
           }
 
@@ -56,16 +61,16 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
             itemCount: pedidosActivos.length,
             itemBuilder: (context, index) {
               final pedido = pedidosActivos[index];
-              final mesaId = pedido['mesa_id'] as int;
-              
-              // Leemos el nombre directamente desde la memoria RAM del Provider
-              final nombreMesa = mesasCache[mesaId] ?? 'Mesa $mesaId';
 
-              // Usamos nuestro nuevo Widget limpio
-              return PedidoCocinaCard(
-                pedido: pedido,
-                nombreMesa: nombreMesa,
-              );
+              // 1. Permitimos valores nulos
+              final mesaId = pedido['mesa_id'] as int?;
+
+              // 2. Manejamos el caso de la mesa eliminada
+              final nombreMesa = mesaId != null
+                  ? (mesasCache[mesaId] ?? 'Mesa $mesaId')
+                  : 'Mesa Eliminada';
+
+              return PedidoCocinaCard(pedido: pedido, nombreMesa: nombreMesa);
             },
           );
         },
