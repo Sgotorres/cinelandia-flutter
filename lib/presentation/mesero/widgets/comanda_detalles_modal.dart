@@ -8,6 +8,7 @@ import '../../../data/repositories/pedidos_repository.dart';
 import '../../../core/utils/result.dart'; // <-- Importación necesaria para Result
 import 'comanda_item_tile.dart';
 import 'comanda_bottom_bar.dart';
+import 'boton_avanzar_estado.dart';
 
 class ComandaDetallesModal extends StatefulWidget {
   final int pedidoId;
@@ -49,7 +50,9 @@ class _ComandaDetallesModalState extends State<ComandaDetallesModal> {
     }
 
     final result = await _pedidosRepository.eliminarDetalleYActualizarPedido(
-        detalleId, widget.pedidoId);
+      detalleId,
+      widget.pedidoId,
+    );
 
     if (mounted) {
       if (result is Error) {
@@ -88,8 +91,10 @@ class _ComandaDetallesModalState extends State<ComandaDetallesModal> {
             children: [
               Text(
                 'Mesa ${widget.mesaId}',
-                style:
-                    const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               IconButton(
                 icon: Container(
@@ -101,7 +106,7 @@ class _ComandaDetallesModalState extends State<ComandaDetallesModal> {
                   child: const Icon(Icons.close, size: 20),
                 ),
                 onPressed: () => Navigator.pop(context),
-              )
+              ),
             ],
           ),
         ),
@@ -159,7 +164,8 @@ class _ComandaDetallesModalState extends State<ComandaDetallesModal> {
                 talla: talla,
                 subtotal: subtotal,
                 isDeleting: _isDeleting,
-                onEliminar: () => _eliminarProducto(item['id'], detalles.length),
+                onEliminar: () =>
+                    _eliminarProducto(item['id'], detalles.length),
               );
             },
           );
@@ -182,6 +188,8 @@ class _ComandaDetallesModalState extends State<ComandaDetallesModal> {
           children: [
             _buildHeader(),
             _buildListadoProductos(menuProvider),
+            BotonAvanzarEstado(pedidoId: widget.pedidoId),
+
             ComandaBottomBar(
               mesaId: widget.mesaId,
               mesaNombre: widget.mesaNombre,
