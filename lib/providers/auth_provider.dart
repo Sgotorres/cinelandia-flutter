@@ -11,30 +11,38 @@ class AuthProvider extends ChangeNotifier {
 
   String _nombre = '';
   String _apellido = '';
-  
-  // 1. NUEVA VARIABLE: Almacena el rol real del usuario autenticado
   String _rol = '';
+  
+  // Bandera clave: le dice al router si ya terminamos de leer la base de datos
+  bool _isRoleLoaded = false;
 
   bool get isLoggedIn => _supabase.auth.currentSession != null;
-  
-  // 2. GETTER ACTUALIZADO: Devuelve el rol real en memoria. Por defecto, 'mesero'.
-  String get userRole => _rol.isEmpty ? 'mesero' : _rol; 
-  
+  bool get isRoleLoaded => _isRoleLoaded;
+  String get userRole => _rol;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
-  String get nombreCompleto => _nombre.isNotEmpty ? '$_nombre $_apellido'.trim() : 'Cargando...';
+  String get nombreCompleto =>
+      _nombre.isNotEmpty ? '$_nombre $_apellido'.trim() : 'Cargando...';
 
   AuthProvider() {
-    _authSubscription = _supabase.auth.onAuthStateChange.listen((event) {
-      if (event.session != null) {
-        _cargarDatosUsuario();
+    // Si ya existe una sesión guardada al arrancar la app, cargamos los datos
+    if (_supabase.auth.currentSession != null) {
+      _cargarDatosUsuario();
+    }
+
+    _authSubscription = _supabase.auth.onAuthStateChange.listen((data) async {
+      final session = data.session;
+      if (session != null) {
+        // Al detectar sesión activa, consultamos el rol
+        await _cargarDatosUsuario();
       } else {
-        // Limpiar datos sensibles al cerrar sesión
+        // Al cerrar sesión, limpiamos la memoria
         _nombre = '';
         _apellido = '';
-        _rol = ''; 
+        _rol = '';
+        _isRoleLoaded = false;
+        notifyListeners();
       }
-      notifyListeners();
     });
   }
 
@@ -43,29 +51,34 @@ class AuthProvider extends ChangeNotifier {
     if (user == null || user.email == null) return;
 
     try {
-      // 3. CONSULTA SEGURA: Añadimos 'rol' al select para traerlo de Supabase
       final response = await _supabase
           .from('usuarios')
-          .select('nombre, apellido, rol') 
+          .select('nombre, apellido, rol')
           .eq('correo', user.email!)
           .maybeSingle();
 
       if (response != null) {
         _nombre = response['nombre'] ?? '';
         _apellido = response['apellido'] ?? '';
-        // 4. ASIGNACIÓN: Guardamos el rol. Si viene nulo de la DB, asignamos 'mesero' por seguridad.
-        _rol = response['rol'] ?? 'mesero'; 
-        
-        notifyListeners();
+        // Normalizamos el rol a minúsculas por si acaso. Por defecto: mesero.
+        _rol = (response['rol'] ?? 'mesero').toString().trim().toLowerCase();
+      } else {
+        _rol = 'mesero';
       }
     } catch (e) {
       debugPrint('Error cargando datos del usuario: $e');
+      _rol = 'mesero'; // En caso de fallo de red, asumimos mesero por seguridad
+    } finally {
+      // Sin importar si falla o tiene éxito, indicamos que ya terminamos de cargar
+      _isRoleLoaded = true;
+      notifyListeners();
     }
   }
 
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = '';
+    _isRoleLoaded = false;
     notifyListeners();
 
     try {
@@ -73,18 +86,23 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
       );
-      
+
+      // Bloqueamos el retorno hasta que se haya leído la tabla de usuarios
+      await _cargarDatosUsuario();
+
       _isLoading = false;
       notifyListeners();
       return true;
     } on AuthException catch (e) {
       _errorMessage = e.message;
       _isLoading = false;
+      _isRoleLoaded = false;
       notifyListeners();
       return false;
     } catch (e) {
       _errorMessage = 'Error inesperado al iniciar sesión';
       _isLoading = false;
+      _isRoleLoaded = false;
       notifyListeners();
       return false;
     }

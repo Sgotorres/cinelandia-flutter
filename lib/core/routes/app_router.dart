@@ -16,7 +16,6 @@ import '../../presentation/admin/screens/admin_dashboard_screen.dart';
 
 // Importación del AuthProvider
 import '../../providers/auth_provider.dart';
-import '../../presentation/auth/login_screen.dart';
 
 class AppRouter {
   static GoRouter router(BuildContext context) {
@@ -33,6 +32,7 @@ class AppRouter {
       // Lógica de Redirección y Protección de Rutas
       redirect: (context, state) {
         final isLoggedIn = authProvider.isLoggedIn; 
+        final isRoleLoaded = authProvider.isRoleLoaded; // <-- Leemos nuestra nueva bandera
         final role = authProvider.userRole; 
         final isLoggingIn = state.matchedLocation == '/login';
 
@@ -41,7 +41,14 @@ class AppRouter {
           return '/login';
         }
 
-        // 2. Si está autenticado y trata de ir al login -> redirigirlo a su respectivo home
+        // 2. NUEVO: Si está autenticado pero aún no se ha descargado el rol, no redirigir aún.
+        // Esto mantiene al usuario en la pantalla de login viendo el "spinner" circular 
+        // hasta que tengamos claro qué permisos tiene.
+        if (isLoggedIn && !isRoleLoaded) {
+          return null; 
+        }
+
+        // 3. Si está autenticado, ya cargó el rol y trata de ir al login -> redirigirlo a su respectivo home
         if (isLoggedIn && isLoggingIn) {
           if (role == 'admin') {
             return '/admin';
@@ -49,7 +56,7 @@ class AppRouter {
           return '/mesero';
         }
 
-        // 3. Protección de rutas por rol: Evitar que un mesero entre a las rutas de admin
+        // 4. Protección de rutas por rol: Evitar que un mesero entre a las rutas de admin
         final isGoingToAdmin = state.matchedLocation.startsWith('/admin');
         if (isGoingToAdmin && role != 'admin') {
           return '/mesero';
