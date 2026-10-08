@@ -1,34 +1,20 @@
-// lib/presentation/admin/widgets/admin_usuarios_tab.dart
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 
+import '../../../providers/usuarios_provider.dart';
+import '../../../data/models/usuario_model.dart';
 import 'formulario_usuario_dialog.dart';
 
-class AdminUsuariosTab extends StatefulWidget {
+class AdminUsuariosTab extends StatelessWidget {
   const AdminUsuariosTab({super.key});
-
-  @override
-  State<AdminUsuariosTab> createState() => _AdminUsuariosTabState();
-}
-
-class _AdminUsuariosTabState extends State<AdminUsuariosTab> {
-  final _supabase = Supabase.instance.client;
-  late final Stream<List<Map<String, dynamic>>> _usuariosStream;
-
-  @override
-  void initState() {
-    super.initState();
-    // Escuchamos la tabla de usuarios
-    _usuariosStream = _supabase
-        .from('usuarios')
-        .stream(primaryKey: ['id'])
-        .order('nombre');
-  }
 
   @override
   Widget build(BuildContext context) {
     final ancho = MediaQuery.of(context).size.width;
     final esMovil = ancho < 600;
+
+    // Conectamos con el provider en lugar de instanciar Supabase
+    final usuariosProvider = context.read<UsuariosProvider>();
 
     void abrirFormularioNuevo() {
       showDialog(
@@ -87,14 +73,14 @@ class _AdminUsuariosTabState extends State<AdminUsuariosTab> {
               ),
             ),
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _usuariosStream,
+            child: StreamBuilder<List<UsuarioModel>>(
+              stream: usuariosProvider.usuariosStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                final usuarios = snapshot.data ?? [];
 
+                final usuarios = snapshot.data ?? [];
                 if (usuarios.isEmpty) {
                   return const Center(
                     child: Text('No hay usuarios registrados.'),
@@ -110,8 +96,8 @@ class _AdminUsuariosTabState extends State<AdminUsuariosTab> {
                       leading: CircleAvatar(
                         backgroundColor: Colors.indigo.shade100,
                         child: Text(
-                          user['nombre'] != null
-                              ? user['nombre'][0].toUpperCase()
+                          user.nombre.isNotEmpty
+                              ? user.nombre[0].toUpperCase()
                               : 'U',
                           style: const TextStyle(
                             color: Colors.indigo,
@@ -120,22 +106,27 @@ class _AdminUsuariosTabState extends State<AdminUsuariosTab> {
                         ),
                       ),
                       title: Text(
-                        '${user['nombre'] ?? ''} ${user['apellido'] ?? ''}',
+                        '${user.nombre} ${user.apellido}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Text(
-                        '${user['correo'] ?? ''} • ${user['rol'] ?? 'mesero'}',
-                      ),
+                      subtitle: Text('${user.correo} • ${user.rol}'),
                       trailing: IconButton(
                         icon: const Icon(
                           Icons.delete_outline,
                           color: Colors.red,
                         ),
                         onPressed: () async {
-                          await _supabase
-                              .from('usuarios')
-                              .delete()
-                              .eq('id', user['id']);
+                          final error = await usuariosProvider.eliminarUsuario(
+                            user.id,
+                          );
+                          if (error != null && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(error),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         },
                       ),
                     );

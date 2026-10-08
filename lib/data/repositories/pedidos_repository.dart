@@ -39,10 +39,10 @@ class PedidosRepository {
     }
 
     int? pedidoIdCreado;
-    
+
     try {
       int pedidoId;
-      
+
       if (pedidoIdExistente != null) {
         // CAMBIO: Ya no consultamos ni calculamos el total aquí.
         // Solo necesitamos saber a qué pedido existente le vamos a agregar los detalles.
@@ -61,13 +61,13 @@ class PedidosRepository {
             })
             .select('id')
             .single();
-            
+
         pedidoId = pedidoResponse['id'];
         pedidoIdCreado = pedidoId;
       }
 
       // Insertamos los detalles en bloque.
-      // Aquí es donde "la magia" ocurre: el Trigger de Supabase detectará estas 
+      // Aquí es donde "la magia" ocurre: el Trigger de Supabase detectará estas
       // inserciones y actualizará el total en la tabla de pedidos de forma segura.
       if (detalles.isNotEmpty) {
         final detallesAInsertar = detalles.map((detalle) {
@@ -75,10 +75,10 @@ class PedidosRepository {
           json['pedido_id'] = pedidoId;
           return json;
         }).toList();
-        
+
         await _supabase.from('detalles_pedido').insert(detallesAInsertar);
       }
-      
+
       return Success(pedidoId);
     } catch (e) {
       if (pedidoIdCreado != null) {
@@ -112,7 +112,7 @@ class PedidosRepository {
       // 1. Borramos el ítem. Al hacerlo, el Trigger de Supabase se activa (por el DELETE)
       // y resta automáticamente el valor de este ítem del total del pedido.
       await _supabase.from('detalles_pedido').delete().eq('id', detalleId);
-      
+
       // 2. Solo verificamos si la comanda se quedó sin productos para cancelarla.
       // OPTIMIZACIÓN: Usamos limit(1) y solo traemos el 'id'. No hace falta traer
       // los precios y cantidades de todo el pedido porque ya no sumamos en el frontend.
@@ -130,7 +130,7 @@ class PedidosRepository {
             .update({'estado': 'cancelada'})
             .eq('id', pedidoId);
       }
-      
+
       return const Success(true);
     } catch (e) {
       return Error(ServerFailure('Error al eliminar el producto: $e'));
@@ -148,9 +148,42 @@ class PedidosRepository {
           .map((d) => PedidoDetalleModel.fromJson(d))
           .toList();
 
-      // Esto volverá a llamar a crearPedido, y nuevamente el servidor se 
+      // Esto volverá a llamar a crearPedido, y nuevamente el servidor se
       // encargará de unificar los montos si hay colisiones.
       await crearPedido(pedidoMap['mesa_id'], pedidoMap['total'], detalles);
+    }
+  }
+
+  Stream<List<Map<String, dynamic>>> obtenerDetallesPedidoStream(int pedidoId) {
+    return _supabase
+        .from('detalles_pedido')
+        .stream(primaryKey: ['id'])
+        .eq('pedido_id', pedidoId);
+  }
+
+  Stream<String> obtenerEstadoPedidoStream(int pedidoId) {
+    return _supabase
+        .from('pedidos')
+        .stream(primaryKey: ['id'])
+        .eq('id', pedidoId)
+        .map((data) {
+          if (data.isEmpty) return 'pendiente';
+          return data.first['estado'] ?? 'pendiente';
+        });
+  }
+
+  Future<Result<bool, Failure>> actualizarEstadoPedido(
+    int pedidoId,
+    String nuevoEstado,
+  ) async {
+    try {
+      await _supabase
+          .from('pedidos')
+          .update({'estado': nuevoEstado})
+          .eq('id', pedidoId);
+      return const Success(true);
+    } catch (e) {
+      return Error(ServerFailure('Error al actualizar estado: $e'));
     }
   }
 }

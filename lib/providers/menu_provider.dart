@@ -1,18 +1,18 @@
 // lib/providers/menu_provider.dart
-import 'dart:async'; // <-- IMPORTANTE: Necesario para StreamSubscription
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
 import '../core/utils/result.dart';
 import '../data/models/producto_model.dart';
 import '../data/repositories/menu_repository.dart';
 
 class MenuProvider extends ChangeNotifier {
   final MenuRepository _menuRepository;
-  
-  // Guardamos la suscripción para poder cancelarla y evitar fugas de memoria
   StreamSubscription<List<ProductoModel>>? _menuSubscription;
 
-  MenuProvider({MenuRepository? menuRepository}) 
-      : _menuRepository = menuRepository ?? MenuRepository();
+  MenuProvider({MenuRepository? menuRepository})
+    : _menuRepository = menuRepository ?? MenuRepository();
 
   List<ProductoModel> _productos = [];
   bool _isLoading = false;
@@ -23,22 +23,22 @@ class MenuProvider extends ChangeNotifier {
   String get errorMessage => _errorMessage;
 
   List<ProductoModel> productosPorCategoria(String categoria) {
-    return _productos.where((p) => p.categoria.toLowerCase() == categoria.toLowerCase()).toList();
+    return _productos
+        .where((p) => p.categoria.toLowerCase() == categoria.toLowerCase())
+        .toList();
   }
 
-  // MÉTODO NUEVO QUE REEMPLAZA A cargarMenu()
   void escucharMenu() {
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
 
-    // Nos suscribimos al Stream del repositorio
     _menuSubscription = _menuRepository.obtenerMenuStream().listen(
       (productosCargados) {
         _productos = productosCargados;
         _isLoading = false;
         _errorMessage = '';
-        notifyListeners(); // Actualiza la UI de todos los meseros al instante
+        notifyListeners();
       },
       onError: (error) {
         _isLoading = false;
@@ -48,7 +48,27 @@ class MenuProvider extends ChangeNotifier {
     );
   }
 
-  // MÉTODO NUEVO PARA LIMPIAR LA MEMORIA
+  // --- NUEVAS ACCIONES DEL ADMINISTRADOR ---
+
+  Future<String?> eliminarProducto(int id) async {
+    final result = await _menuRepository.eliminarProducto(id);
+    if (result is Error) {
+      return (result as Error).failure.message;
+    }
+    return null; // Éxito
+  }
+
+  Future<String?> actualizarDisponibilidad(int id, bool disponible) async {
+    final result = await _menuRepository.actualizarDisponibilidad(
+      id,
+      disponible,
+    );
+    if (result is Error) {
+      return (result as Error).failure.message;
+    }
+    return null; // Éxito
+  }
+
   @override
   void dispose() {
     _menuSubscription?.cancel();

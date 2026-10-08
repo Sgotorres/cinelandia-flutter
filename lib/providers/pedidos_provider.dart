@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../data/models/pedido_detalle_model.dart';
 import '../data/models/producto_model.dart';
+import '../data/repositories/pedidos_repository.dart';
 import '../domain/usecases/gestionar_carrito_usecase.dart';
 import '../domain/usecases/tomar_pedido_usecase.dart';
 import '../core/utils/result.dart'; // <-- Nueva importación
@@ -11,8 +12,13 @@ import '../core/errors/failures.dart'; // <-- Nueva importación
 class PedidosProvider extends ChangeNotifier {
   final TomarPedidoUseCase _tomarPedidoUseCase;
   final GestionarCarritoUseCase _gestionarCarritoUseCase;
+  final PedidosRepository _pedidosRepository;
 
-  PedidosProvider(this._tomarPedidoUseCase, this._gestionarCarritoUseCase);
+  PedidosProvider(
+    this._tomarPedidoUseCase,
+    this._gestionarCarritoUseCase,
+    this._pedidosRepository,
+  );
 
   // Estado puro de UI
   int? _mesaIdSeleccionada;
@@ -137,5 +143,24 @@ class PedidosProvider extends ChangeNotifier {
 
     notifyListeners();
     return false;
+  }
+
+  Stream<List<Map<String, dynamic>>> detallesPedidoStream(int pedidoId) {
+    return _pedidosRepository.obtenerDetallesPedidoStream(pedidoId);
+  }
+
+  Stream<String> estadoPedidoStream(int pedidoId) {
+    return _pedidosRepository.obtenerEstadoPedidoStream(pedidoId);
+  }
+
+  Future<String?> actualizarEstado(int pedidoId, String nuevoEstado) async {
+    final result = await _pedidosRepository.actualizarEstadoPedido(
+      pedidoId,
+      nuevoEstado,
+    );
+    if (result is Error) {
+      return (result as Error).failure.message;
+    }
+    return null; // Éxito
   }
 }

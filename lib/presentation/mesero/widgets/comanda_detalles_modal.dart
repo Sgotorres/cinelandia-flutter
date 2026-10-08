@@ -1,14 +1,19 @@
-// lib/presentation/mesero/widgets/comanda_detalles_modal.dart
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 
-import '../../../providers/menu_provider.dart';
+// Inyección de dependencias y utilidades
+import '../../../core/di/injection.dart' as di;
+import '../../../core/utils/result.dart';
+
+// Repositorios y Providers
 import '../../../data/repositories/pedidos_repository.dart';
-import '../../../core/utils/result.dart'; // <-- Importación necesaria para Result
-import 'comanda_item_tile.dart';
-import 'comanda_bottom_bar.dart';
+import '../../../providers/menu_provider.dart';
+import '../../../providers/pedidos_provider.dart'; // <-- ESTA ES LA IMPORTACIÓN QUE FALTABA
+
+// Widgets
 import 'boton_avanzar_estado.dart';
+import 'comanda_bottom_bar.dart';
+import 'comanda_item_tile.dart';
 
 class ComandaDetallesModal extends StatefulWidget {
   final int pedidoId;
@@ -28,19 +33,19 @@ class ComandaDetallesModal extends StatefulWidget {
 
 class _ComandaDetallesModalState extends State<ComandaDetallesModal> {
   late final Stream<List<Map<String, dynamic>>> _detallesStream;
-  final _pedidosRepository = PedidosRepository();
+  final _pedidosRepository = di.sl<PedidosRepository>(); // Usamos GetIt
   bool _isDeleting = false;
 
   @override
   void initState() {
     super.initState();
-    _detallesStream = Supabase.instance.client
-        .from('detalles_pedido')
-        .stream(primaryKey: ['id'])
-        .eq('pedido_id', widget.pedidoId);
+    // Lo pedimos al provider en lugar de a Supabase directamente
+    _detallesStream = context.read<PedidosProvider>().detallesPedidoStream(
+      widget.pedidoId,
+    );
   }
 
-  // --- LÓGICA DE ELIMINACIÓN ACTUALIZADA CON RESULT ---
+  // --- LÓGICA DE ELIMINACIÓN ---
   Future<void> _eliminarProducto(int detalleId, int totalItems) async {
     if (_isDeleting) return;
     setState(() => _isDeleting = true);
@@ -68,7 +73,6 @@ class _ComandaDetallesModalState extends State<ComandaDetallesModal> {
   }
 
   // --- COMPONENTES VISUALES ---
-
   Widget _buildHeader() {
     return Column(
       children: [
@@ -123,9 +127,7 @@ class _ComandaDetallesModalState extends State<ComandaDetallesModal> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-
           final detalles = snapshot.data ?? [];
-
           if (detalles.isEmpty) return const SizedBox.shrink();
 
           return ListView.builder(
@@ -189,7 +191,6 @@ class _ComandaDetallesModalState extends State<ComandaDetallesModal> {
             _buildHeader(),
             _buildListadoProductos(menuProvider),
             BotonAvanzarEstado(pedidoId: widget.pedidoId),
-
             ComandaBottomBar(
               mesaId: widget.mesaId,
               mesaNombre: widget.mesaNombre,

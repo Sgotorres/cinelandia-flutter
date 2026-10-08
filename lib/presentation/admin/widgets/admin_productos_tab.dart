@@ -1,48 +1,37 @@
 // lib/presentation/admin/widgets/admin_productos_tab.dart
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 
+import '../../../providers/menu_provider.dart';
 import 'formulario_producto_dialog.dart';
 import 'producto_list_tile.dart';
 
-class AdminProductosTab extends StatefulWidget {
+// Fíjate que eliminamos la importación de supabase_flutter por completo
+
+class AdminProductosTab extends StatelessWidget {
   const AdminProductosTab({super.key});
-
-  @override
-  State<AdminProductosTab> createState() => _AdminProductosTabState();
-}
-
-class _AdminProductosTabState extends State<AdminProductosTab> {
-  final _supabase = Supabase.instance.client;
-  late final Stream<List<Map<String, dynamic>>> _productosStream;
-
-  @override
-  void initState() {
-    super.initState();
-    _productosStream = _supabase
-        .from('productos')
-        .stream(primaryKey: ['id'])
-        .order('categoria');
-  }
-
-  void _mostrarError(String mensaje) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensaje), backgroundColor: Colors.red),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final ancho = MediaQuery.of(context).size.width;
     final esMovil = ancho < 600;
 
+    // Conectamos la vista con el provider
+    final menuProvider = context.watch<MenuProvider>();
+
     void abrirFormularioNuevo() {
       showDialog(
         context: context,
         builder: (_) => const FormularioProductoDialog(),
       );
+    }
+
+    void mostrarError(String mensaje) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(mensaje), backgroundColor: Colors.red),
+        );
+      }
     }
 
     return Scaffold(
@@ -95,51 +84,35 @@ class _AdminProductosTabState extends State<AdminProductosTab> {
               ),
             ),
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _productosStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final productos = snapshot.data ?? [];
-                return ListView.builder(
-                  padding: EdgeInsets.only(top: esMovil ? 16 : 0),
-                  itemCount: productos.length,
-                  itemBuilder: (context, index) {
-                    final p = productos[index];
-                    return ProductoListTile(
-                      producto: p,
-                      onEdit: () => showDialog(
-                        context: context,
-                        builder: (_) => FormularioProductoDialog(producto: p),
-                      ),
-                      onDelete: () async {
-                        try {
-                          await _supabase
-                              .from('productos')
-                              .delete()
-                              .eq('id', p['id']);
-                        } catch (e) {
-                          _mostrarError('Error al eliminar producto: $e');
-                        }
-                      },
-                      onToggleDisponibilidad: (nuevoValor) async {
-                        try {
-                          await _supabase
-                              .from('productos')
-                              .update({'disponible': nuevoValor})
-                              .eq('id', p['id']);
-                        } catch (e) {
-                          _mostrarError(
-                            'Error al actualizar disponibilidad: $e',
+            // Evaluamos el estado desde el provider
+            child: menuProvider.isLoading && menuProvider.productos.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    padding: EdgeInsets.only(top: esMovil ? 16 : 0),
+                    itemCount: menuProvider.productos.length,
+                    itemBuilder: (context, index) {
+                      final p = menuProvider.productos[index];
+                      return ProductoListTile(
+                        producto: p.toJson(), // Pasamos a JSON temporalmente para que tu ProductoListTile actual funcione
+                        onEdit: () => showDialog(
+                          context: context,
+                          builder: (_) =>
+                              FormularioProductoDialog(producto: p.toJson()),
+                        ),
+                        onDelete: () async {
+                          final error = await menuProvider.eliminarProducto(
+                            p.id,
                           );
-                        }
-                      },
-                    );
-                  },
-                );
-              },
-            ),
+                          if (error != null) mostrarError(error);
+                        },
+                        onToggleDisponibilidad: (nuevoValor) async {
+                          final error = await menuProvider
+                              .actualizarDisponibilidad(p.id, nuevoValor);
+                          if (error != null) mostrarError(error);
+                        },
+                      );
+                    },
+                  ),
           ),
         ],
       ),

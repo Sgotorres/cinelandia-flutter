@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+
+import '../../../providers/pedidos_provider.dart';
 
 class BotonAvanzarEstado extends StatelessWidget {
   final int pedidoId;
@@ -25,27 +27,15 @@ class BotonAvanzarEstado extends StatelessWidget {
         return;
     }
 
-    try {
-      await Supabase.instance.client
-          .from('pedidos')
-          .update({'estado': nuevoEstado})
-          .eq('id', pedidoId);
+    final provider = context.read<PedidosProvider>();
+    final error = await provider.actualizarEstado(pedidoId, nuevoEstado);
 
-      // Si el pedido se marca como pagado, cerramos el modal para liberar la pantalla
-      if (nuevoEstado == 'pagado' && context.mounted) {
-        if (Navigator.canPop(context)) {
-          Navigator.pop(context);
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al actualizar estado: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (error != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
+    } else if (nuevoEstado == 'pagado' && context.mounted) {
+      if (Navigator.canPop(context)) Navigator.pop(context);
     }
   }
 
@@ -76,14 +66,14 @@ class BotonAvanzarEstado extends StatelessWidget {
         color = Colors.purple;
         break;
       case 'pagado':
-        return const SizedBox.shrink(); // Ocultar si ya se pagó
+        return const SizedBox.shrink();
       default:
         return const SizedBox.shrink();
     }
 
     return Container(
       width: double.infinity,
-      color: Colors.white, // Fondo blanco para integrarse con la barra inferior
+      color: Colors.white,
       padding: const EdgeInsets.only(left: 24, right: 24, top: 16),
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
@@ -107,18 +97,13 @@ class BotonAvanzarEstado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Map<String, dynamic>>>(
-      // Escuchamos el pedido en específico para que el botón cambie en tiempo real
-      stream: Supabase.instance.client
-          .from('pedidos')
-          .stream(primaryKey: ['id'])
-          .eq('id', pedidoId),
+    final pedidosProvider = context.read<PedidosProvider>();
+
+    return StreamBuilder<String>(
+      stream: pedidosProvider.estadoPedidoStream(pedidoId),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        final estado = snapshot.data!.first['estado'] ?? 'pendiente';
-        return _buildBotonAccion(context, estado);
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        return _buildBotonAccion(context, snapshot.data!);
       },
     );
   }

@@ -1,42 +1,22 @@
-// lib/presentation/admin/widgets/admin_mesas_tab.dart
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 
+import '../../../providers/mesas_provider.dart';
+import '../../../data/models/mesa_model.dart';
 import 'formulario_mesa_dialog.dart';
-import 'mesa_list_tile.dart';
 
-class AdminMesasTab extends StatefulWidget {
+// Eliminamos la importación de supabase_flutter
+
+class AdminMesasTab extends StatelessWidget {
   const AdminMesasTab({super.key});
-
-  @override
-  State<AdminMesasTab> createState() => _AdminMesasTabState();
-}
-
-class _AdminMesasTabState extends State<AdminMesasTab> {
-  final _supabase = Supabase.instance.client;
-  late final Stream<List<Map<String, dynamic>>> _mesasStream;
-
-  @override
-  void initState() {
-    super.initState();
-    _mesasStream = _supabase
-        .from('mesas')
-        .stream(primaryKey: ['id'])
-        .order('orden');
-  }
-
-  void _mostrarError(String mensaje) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(mensaje), backgroundColor: Colors.red),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final ancho = MediaQuery.of(context).size.width;
     final esMovil = ancho < 600;
+
+    // Accedemos a nuestro Provider inyectado
+    final mesasProvider = context.read<MesasProvider>();
 
     void abrirFormularioNuevo() {
       showDialog(
@@ -95,34 +75,62 @@ class _AdminMesasTabState extends State<AdminMesasTab> {
               ),
             ),
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _mesasStream,
+            // Ahora escuchamos objetos MesaModel puros, no Map<String, dynamic>
+            child: StreamBuilder<List<MesaModel>>(
+              stream: mesasProvider.mesasStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
+
                 final mesas = snapshot.data ?? [];
+
                 return ListView.builder(
                   padding: EdgeInsets.only(top: esMovil ? 16 : 0),
                   itemCount: mesas.length,
                   itemBuilder: (context, index) {
                     final m = mesas[index];
-                    return MesaListTile(
-                      mesa: m,
-                      onEdit: () => showDialog(
-                        context: context,
-                        builder: (_) => FormularioMesaDialog(mesa: m),
+                    return ListTile(
+                      leading: const CircleAvatar(
+                        backgroundColor: Colors.indigoAccent,
+                        child: Icon(Icons.chair_alt, color: Colors.white),
                       ),
-                      onDelete: () async {
-                        try {
-                          await _supabase
-                              .from('mesas')
-                              .delete()
-                              .eq('id', m['id']);
-                        } catch (e) {
-                          _mostrarError('Error al eliminar mesa: $e');
-                        }
-                      },
+                      title: Text(
+                        m.nombre,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text('Orden de vista: ${m.orden}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            onPressed: () => showDialog(
+                              context: context,
+                              // Tendrás que adaptar tu FormularioMesaDialog para que acepte un MesaModel o transformar esto a JSON temporalmente
+                              builder: (_) =>
+                                  FormularioMesaDialog(mesa: m.toJson()),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              // La UI solo llama al método del provider y muestra el resultado
+                              final errorMsg = await mesasProvider.eliminarMesa(
+                                m.id,
+                              );
+                              if (errorMsg != null && context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(errorMsg),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
                     );
                   },
                 );
