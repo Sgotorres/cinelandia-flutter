@@ -170,4 +170,24 @@ class PedidosProvider extends ChangeNotifier {
     }
     return null; // Éxito
   }
+
+  // --- NUEVOS MÉTODOS AÑADIDOS (Separation of Concerns) ---
+
+  // Método para eliminar un detalle delegando al repositorio
+  Future<String?> eliminarDetalle(int detalleId, int pedidoId) async {
+    final result = await _pedidosRepository.eliminarDetalleYActualizarPedido(
+      detalleId,
+      pedidoId,
+    );
+    
+    if (result is Error) {
+      return (result as Error).failure.message;
+    }
+    return null; // Retorna null si fue un éxito
+  }
+
+  // Método para sincronizar la cola offline
+  Future<void> sincronizarPedidosOffline() async {
+    await _pedidosRepository.sincronizarPedidosOffline();
+  }
 }

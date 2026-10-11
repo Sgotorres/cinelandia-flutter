@@ -11,15 +11,12 @@ import 'core/routes/app_router.dart';
 // Inyección de Dependencias
 import 'core/di/injection.dart' as di;
 
-// Repositorios
-import 'data/repositories/pedidos_repository.dart';
-
-// Providers
+// Providers (Ya no importamos el repositorio aquí)
 import 'providers/menu_provider.dart';
 import 'providers/pedidos_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/mesas_provider.dart';
-import 'providers/usuarios_provider.dart'; // <-- NUEVA IMPORTACIÓN
+import 'providers/usuarios_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,7 +47,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => di.sl<PedidosProvider>()),
         ChangeNotifierProvider(
           create: (_) => di.sl<UsuariosProvider>(),
-        ), // <-- NUEVO PROVIDER REGISTRADO
+        ),
         ChangeNotifierProvider(create: (_) => di.sl<NotificacionesProvider>()),
       ],
       child: const MyApp(),
@@ -66,8 +63,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // Pedimos el repositorio inyectado desde GetIt en lugar de instanciarlo manualmente
-  final _pedidosRepository = di.sl<PedidosRepository>();
+  // ELIMINADO: Ya no inyectamos el repositorio aquí manualmente
 
   @override
   void initState() {
@@ -78,7 +74,12 @@ class _MyAppState extends State<MyApp> {
     ) {
       if (!results.contains(ConnectivityResult.none)) {
         debugPrint('Internet restaurado. Sincronizando comandas pendientes...');
-        _pedidosRepository.sincronizarPedidosOffline();
+        
+        // NUEVO: Delegamos la orden de sincronizar al Provider (que contiene la lógica de negocio)
+        // usando el contexto de la aplicación, ya que MyApp es hijo de MultiProvider.
+        if (mounted) {
+          context.read<PedidosProvider>().sincronizarPedidosOffline();
+        }
       }
     });
   }
@@ -87,7 +88,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Pizza Planeta',
+      title: 'Pizza Planeta', // O Pizzeria Panzerotto según tu preferencia
       routerConfig: AppRouter.router(context),
     );
   }
