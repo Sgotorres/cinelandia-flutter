@@ -1,3 +1,4 @@
+// lib/presentation/mesero/widgets/vista_mesas.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/mesas_provider.dart';
@@ -21,7 +22,9 @@ class _VistaMesasState extends State<VistaMesas> {
     super.initState();
     // Delegamos ambas consultas a los providers
     _mesasStream = context.read<MesasProvider>().mesasStream;
-    _pedidosStream = context.read<PedidosProvider>().obtenerTodosLosPedidosStream();
+    
+    // NUEVO: Cambiamos a la consulta optimizada que evita descargar todo el historial
+    _pedidosStream = context.read<PedidosProvider>().obtenerPedidosActivosStream();
   }
 
   @override
@@ -43,14 +46,14 @@ class _VistaMesasState extends State<VistaMesas> {
           return StreamBuilder<List<Map<String, dynamic>>>(
             stream: _pedidosStream,
             builder: (context, pedidosSnap) {
-              final todosLosPedidos = pedidosSnap.data ?? [];
-              final pedidosActivos = todosLosPedidos.where((p) {
-                final estado = p['estado']?.toString().toLowerCase();
-                return estado != 'pagado' && estado != 'cancelada';
-              }).toList();
+              
+              // NUEVO: Ya no realizamos el filtrado manual en la lista. 
+              // Tomamos los datos directamente porque el backend ya los filtró.
+              final pedidosActivos = pedidosSnap.data ?? [];
 
               int countDisponible = 0, countPendiente = 0, countHorno = 0, countLista = 0, countComiendo = 0;
 
+              // La iteración ahora es mucho más ligera
               for (var mesa in mesasActivas) {
                 final pedido = pedidosActivos.where((p) => p['mesa_id'] == mesa.id).firstOrNull; // mesa.id
                 final estado = pedido?['estado']?.toString().toLowerCase() ?? 'disponible';

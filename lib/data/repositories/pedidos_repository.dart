@@ -91,4 +91,7 @@ class PedidosRepository {
 
   Stream<String> obtenerEstadoPedidoStream(int pedidoId) =>
       _remoteDataSource.obtenerEstadoPedidoStream(pedidoId);
+      
+  Stream<List<Map<String, dynamic>>> obtenerPedidosActivosStream() =>
+      _remoteDataSource.obtenerPedidosActivosStream();
 }

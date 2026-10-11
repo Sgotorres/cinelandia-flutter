@@ -80,8 +80,8 @@ class RemotePedidosDataSource {
     }
   }
 
-  // --- STREAMS ---
-  // Aprovechamos de agregar el stream global que necesitábamos antes
+  // --- STREAMS ORIGINALES ---
+  
   Stream<List<Map<String, dynamic>>> obtenerTodosLosPedidosStream() {
     return _supabase.from('pedidos').stream(primaryKey: ['id']).order('fecha', ascending: false);
   }
@@ -96,5 +96,30 @@ class RemotePedidosDataSource {
         .stream(primaryKey: ['id'])
         .eq('id', pedidoId)
         .map((data) => data.isEmpty ? 'pendiente' : data.first['estado'] ?? 'pendiente');
+  }
+
+  // --- NUEVAS OPTIMIZACIONES DE RENDIMIENTO ---
+
+  /// Llamada al RPC para delegar los cálculos estadísticos a la base de datos
+  /// Ideal para el panel de administración.
+  Future<Map<String, dynamic>> obtenerEstadisticasMesas() async {
+    try {
+      final response = await _supabase.rpc('obtener_estadisticas_mesas');
+      return response as Map<String, dynamic>;
+    } catch (e) {
+      throw ServerException('Error al obtener estadísticas de mesas: $e');
+    }
+  }
+
+  /// Stream optimizado que filtra los pedidos finalizados directamente en el servidor.
+  /// Ideal para no saturar la RAM de los dispositivos en la vista de Mesas y Comandas.
+  Stream<List<Map<String, dynamic>>> obtenerPedidosActivosStream() {
+    return _supabase
+        .from('pedidos')
+        .stream(primaryKey: ['id'])
+        // Filtramos estados inactivos en el servidor (Costo 0 en RAM local)
+        .neq('estado', 'pagado')
+        .neq('estado', 'cancelada')
+        .order('fecha', ascending: false);
   }
 }

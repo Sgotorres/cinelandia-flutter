@@ -147,6 +147,11 @@ class PedidosProvider extends ChangeNotifier {
 
   // --- MÉTODOS DE STREAMS ---
   
+  // 👇 NUEVA FUNCIÓN AGREGADA CORRECTAMENTE AL PROVIDER 👇
+  Stream<List<Map<String, dynamic>>> obtenerPedidosActivosStream() {
+    return _pedidosRepository.obtenerPedidosActivosStream();
+  }
+
   // Expone el stream de todos los pedidos a la UI
   Stream<List<Map<String, dynamic>>> obtenerTodosLosPedidosStream() {
     return _pedidosRepository.obtenerTodosLosPedidosStream();

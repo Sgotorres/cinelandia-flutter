@@ -24,11 +24,20 @@ class _CampanitaWidgetState extends State<CampanitaWidget> {
   }
 
   Future<void> _enviarTimbre(String miRol, String miNombre) async {
+    // 1. Capturamos el ScaffoldMessenger ANTES del gap asíncrono
+    final messenger = ScaffoldMessenger.of(context);
+
+    // 2. Cierre Síncrono: Cerramos el modal inmediatamente sin esperar a Supabase.
+    // Esto garantiza que cerramos exactamente el BottomSheet y damos feedback rápido al usuario.
+    Navigator.pop(context);
+
     try {
+      // 3. Ejecutamos la operación asíncrona de fondo
       await context.read<NotificacionesProvider>().enviarTimbre(miRol, miNombre);
+
+      // 4. Usamos el messenger capturado (ya no dependemos de 'context' tras el await)
       if (mounted) {
-        Navigator.pop(context); // Cierra el modal tras enviar
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('¡Timbre enviado exitosamente!'),
             backgroundColor: Colors.green,
@@ -38,6 +47,16 @@ class _CampanitaWidgetState extends State<CampanitaWidget> {
       }
     } catch (e) {
       debugPrint('Error enviando timbre: $e');
+      if (mounted) {
+        // Manejo de error visual por si falla la conexión
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Error al enviar el timbre. Verifica tu conexión.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
