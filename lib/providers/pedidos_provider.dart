@@ -6,8 +6,8 @@ import '../data/models/producto_model.dart';
 import '../data/repositories/pedidos_repository.dart';
 import '../domain/usecases/gestionar_carrito_usecase.dart';
 import '../domain/usecases/tomar_pedido_usecase.dart';
-import '../core/utils/result.dart'; // <-- Nueva importación
-import '../core/errors/failures.dart'; // <-- Nueva importación
+import '../core/utils/result.dart'; 
+import '../core/errors/failures.dart'; 
 
 class PedidosProvider extends ChangeNotifier {
   final TomarPedidoUseCase _tomarPedidoUseCase;
@@ -143,6 +143,13 @@ class PedidosProvider extends ChangeNotifier {
 
     notifyListeners();
     return false;
+  }
+
+  // --- MÉTODOS DE STREAMS ---
+  
+  // Expone el stream de todos los pedidos a la UI
+  Stream<List<Map<String, dynamic>>> obtenerTodosLosPedidosStream() {
+    return _pedidosRepository.obtenerTodosLosPedidosStream();
   }
 
   Stream<List<Map<String, dynamic>>> detallesPedidoStream(int pedidoId) {

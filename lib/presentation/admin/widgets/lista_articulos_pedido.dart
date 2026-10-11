@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/menu_provider.dart';
+import '../../../providers/pedidos_provider.dart';
 
 class ListaArticulosPedido extends StatefulWidget {
   final int pedidoId;
@@ -18,11 +19,8 @@ class _ListaArticulosPedidoState extends State<ListaArticulosPedido> {
   @override
   void initState() {
     super.initState();
-    // El stream se inicializa UNA sola vez, evitando crear múltiples escuchas
-    _detallesStream = Supabase.instance.client
-        .from('detalles_pedido')
-        .stream(primaryKey: ['id'])
-        .eq('pedido_id', widget.pedidoId);
+    // 2. Usar el provider en lugar de Supabase.instance...
+    _detallesStream = context.read<PedidosProvider>().detallesPedidoStream(widget.pedidoId);
   }
 
   @override

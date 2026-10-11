@@ -1,3 +1,4 @@
+import 'package:cinelandia/providers/notificaciones_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -50,6 +51,7 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => di.sl<UsuariosProvider>(),
         ), // <-- NUEVO PROVIDER REGISTRADO
+        ChangeNotifierProvider(create: (_) => di.sl<NotificacionesProvider>()),
       ],
       child: const MyApp(),
     ),

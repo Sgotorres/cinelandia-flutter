@@ -1,8 +1,8 @@
 // lib/presentation/shared/widgets/campanita_widget.dart
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/notificaciones_provider.dart';
 
 class CampanitaWidget extends StatefulWidget {
   final Color iconColor;
@@ -14,38 +14,18 @@ class CampanitaWidget extends StatefulWidget {
 
 class _CampanitaWidgetState extends State<CampanitaWidget> {
   late Stream<List<Map<String, dynamic>>> _notificacionesStream;
-  final _supabase = Supabase.instance.client;
-
-  @override
-  void initState() {
-    super.initState();
-    // Escucharemos las notificaciones en tiempo real usando didChangeDependencies
-  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final miRol = context.read<AuthProvider>().userRole;
-    
-    // Escuchamos solo las notificaciones dirigidas a mi rol que no han sido leídas
-    _notificacionesStream = _supabase
-        .from('notificaciones')
-        .stream(primaryKey: ['id'])
-        .eq('receptor', miRol)
-        .eq('leido', false)
-        .order('fecha', ascending: false);
+    // Delegamos al provider, limpiando completamente el acceso a Supabase desde la UI
+    _notificacionesStream = context.read<NotificacionesProvider>().notificacionesStream(miRol);
   }
 
   Future<void> _enviarTimbre(String miRol, String miNombre) async {
-    final receptor = miRol == 'admin' ? 'mesero' : 'admin';
-    final emisorNombre = miRol == 'admin' ? 'La Administración' : 'Mesero: $miNombre';
-
     try {
-      await _supabase.from('notificaciones').insert({
-        'emisor': miRol,
-        'receptor': receptor,
-        'mensaje': '🔔 $emisorNombre te está llamando',
-      });
+      await context.read<NotificacionesProvider>().enviarTimbre(miRol, miNombre);
       if (mounted) {
         Navigator.pop(context); // Cierra el modal tras enviar
         ScaffoldMessenger.of(context).showSnackBar(
@@ -62,7 +42,7 @@ class _CampanitaWidgetState extends State<CampanitaWidget> {
   }
 
   Future<void> _marcarComoLeida(int id) async {
-    await _supabase.from('notificaciones').update({'leido': true}).eq('id', id);
+    await context.read<NotificacionesProvider>().marcarComoLeida(id);
   }
 
   void _abrirPanelNotificaciones(BuildContext context, String miRol, String miNombre) {
@@ -97,7 +77,6 @@ class _CampanitaWidgetState extends State<CampanitaWidget> {
                         child: Text('No tienes llamadas pendientes', style: TextStyle(color: Colors.grey)),
                       );
                     }
-
                     return ListView.builder(
                       itemCount: notificaciones.length,
                       itemBuilder: (context, index) {
@@ -153,13 +132,13 @@ class _CampanitaWidgetState extends State<CampanitaWidget> {
     final authProvider = context.watch<AuthProvider>();
     final miRol = authProvider.userRole;
     final miNombre = authProvider.nombreCompleto;
-
+    
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _notificacionesStream,
       builder: (context, snapshot) {
         final notificaciones = snapshot.data ?? [];
         final tieneNuevas = notificaciones.isNotEmpty;
-
+        
         return Stack(
           alignment: Alignment.center,
           children: [
