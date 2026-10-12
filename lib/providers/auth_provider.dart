@@ -1,5 +1,6 @@
 // lib/providers/auth_provider.dart
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -12,9 +13,11 @@ class AuthProvider extends ChangeNotifier {
   String _nombre = '';
   String _apellido = '';
   String _rol = '';
-  
+
   // Bandera clave: le dice al router si ya terminamos de leer la base de datos
   bool _isRoleLoaded = false;
+
+  bool _isFetchingRole = false;
 
   bool get isLoggedIn => _supabase.auth.currentSession != null;
   bool get isRoleLoaded => _isRoleLoaded;
@@ -47,8 +50,12 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> _cargarDatosUsuario() async {
+    if (_isFetchingRole) return;
+
     final user = _supabase.auth.currentUser;
     if (user == null || user.email == null) return;
+
+    _isFetchingRole = true;
 
     try {
       final response = await _supabase
@@ -71,6 +78,7 @@ class AuthProvider extends ChangeNotifier {
     } finally {
       // Sin importar si falla o tiene éxito, indicamos que ya terminamos de cargar
       _isRoleLoaded = true;
+      _isFetchingRole = false;
       notifyListeners();
     }
   }
@@ -82,10 +90,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
+      await _supabase.auth.signInWithPassword(email: email, password: password);
 
       // Bloqueamos el retorno hasta que se haya leído la tabla de usuarios
       await _cargarDatosUsuario();

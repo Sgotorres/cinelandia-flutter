@@ -134,15 +134,17 @@ class RemotePedidosDataSource {
     }
   }
 
-  /// Stream optimizado que filtra los pedidos finalizados directamente en el servidor.
-  /// Ideal para no saturar la RAM de los dispositivos en la vista de Mesas y Comandas.
+  // lib/data/datasources/remote_pedidos_datasource.dart
+  // (Mantén el resto del archivo igual y solo reemplaza esta función al final)
+
+  /// Stream optimizado. Quitamos el filtro .neq() del servidor porque causaba
+  /// bugs de sincronización en tiempo real con Supabase.
+  /// Ahora el filtrado lo hace la UI de forma segura.
   Stream<List<Map<String, dynamic>>> obtenerPedidosActivosStream() {
     return _supabase
         .from('pedidos')
         .stream(primaryKey: ['id'])
-        // Filtramos estados inactivos en el servidor (Costo 0 en RAM local)
-        .neq('estado', 'pagado')
-        .neq('estado', 'cancelada')
-        .order('fecha', ascending: true); // Cambiado a true
+        // ELIMINAMOS los .neq('estado', 'pagado') que congelaban la mesa
+        .order('fecha', ascending: true);
   }
 }
