@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../widgets/pedido_cocina_card.dart';
-import '../../../providers/mesas_provider.dart'; // <-- Importación del nuevo provider
+import '../../../providers/mesas_provider.dart';
 
 class AdminPedidosScreen extends StatefulWidget {
   const AdminPedidosScreen({super.key});
@@ -19,7 +19,6 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
   @override
   void initState() {
     super.initState();
-
     _pedidosStream = Supabase.instance.client
         .from('pedidos')
         .stream(primaryKey: ['id'])
@@ -28,7 +27,6 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Escuchamos el Provider para obtener los nombres de las mesas
     final mesasCache = context.watch<MesasProvider>().mesasCache;
 
     return Scaffold(
@@ -36,10 +34,12 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _pedidosStream,
         builder: (context, snapshot) {
-          if (snapshot.hasError)
+          if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
-          if (snapshot.connectionState == ConnectionState.waiting)
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
 
           final todosLosPedidos = snapshot.data ?? [];
           final pedidosActivos = todosLosPedidos.where((p) {
@@ -56,22 +56,40 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
             );
           }
 
-          return ListView.builder(
+          // Usamos SingleChildScrollView y un Wrap para que las tarjetas crezcan
+          // orgánicamente según sus productos y se acomoden en la pantalla.
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
-            itemCount: pedidosActivos.length,
-            itemBuilder: (context, index) {
-              final pedido = pedidosActivos[index];
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Calculamos cuántas columnas caben según el ancho de la pantalla
+                double anchoPantalla = constraints.maxWidth;
+                int columnas = 1;
+                if (anchoPantalla >= 1200) {
+                  columnas = 3;
+                } else if (anchoPantalla >= 800) {
+                  columnas = 2;
+                }
 
-              // 1. Permitimos valores nulos
-              final mesaId = pedido['mesa_id'] as int?;
+                double anchoTarjeta = (anchoPantalla - (16 * (columnas - 1))) / columnas;
 
-              // 2. Manejamos el caso de la mesa eliminada
-              final nombreMesa = mesaId != null
-                  ? (mesasCache[mesaId] ?? 'Mesa $mesaId')
-                  : 'Mesa Eliminada';
+                return Wrap(
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: pedidosActivos.map((pedido) {
+                    final mesaId = pedido['mesa_id'] as int?;
+                    final nombreMesa = mesaId != null
+                        ? (mesasCache[mesaId] ?? 'Mesa $mesaId')
+                        : 'Mesa Eliminada';
 
-              return PedidoCocinaCard(pedido: pedido, nombreMesa: nombreMesa);
-            },
+                    return SizedBox(
+                      width: anchoTarjeta,
+                      child: PedidoCocinaCard(pedido: pedido, nombreMesa: nombreMesa),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
           );
         },
       ),
