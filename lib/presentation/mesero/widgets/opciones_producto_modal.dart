@@ -1,16 +1,18 @@
 // lib/presentation/mesero/widgets/opciones_producto_modal.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../data/models/producto_model.dart';
 import '../../../providers/pedidos_provider.dart';
 
 class OpcionesProductoModal extends StatefulWidget {
   final ProductoModel producto;
-  final ProductoModel? producto2; // NUEVO: Producto opcional para la segunda mitad
+  final ProductoModel?
+  producto2; // NUEVO: Producto opcional para la segunda mitad
 
   const OpcionesProductoModal({
-    super.key, 
-    required this.producto, 
+    super.key,
+    required this.producto,
     this.producto2,
   });
 
@@ -26,10 +28,11 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
   Widget build(BuildContext context) {
     // Si no tiene precios de tamaño, es una bebida o extra
     final bool esPizza = widget.producto.categoria.toLowerCase() == 'pizzas';
-    final bool esMitad = widget.producto2 != null; // Verifica si es mitad y mitad
+    final bool esMitad =
+        widget.producto2 != null; // Verifica si es mitad y mitad
 
     // Crea el string combinado si existen dos productos
-    final String tituloProducto = esMitad 
+    final String tituloProducto = esMitad
         ? '1/2 ${widget.producto.nombre} y 1/2 ${widget.producto2!.nombre}'
         : widget.producto.nombre;
 
@@ -48,35 +51,47 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           if (esPizza) ...[
             const Text('Tamaño:', style: TextStyle(fontSize: 18)),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                // <-- NUEVO RADIO BUTTON
-                Expanded(
-                  child: RadioListTile<String>(
-                    title: const Text('Mediana'), // o 'Pequeña'
-                    value: 'Mediana',
-                    groupValue: tallaSeleccionada,
-                    onChanged: (val) => setState(() => tallaSeleccionada = val!),
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Radio<String>(
+                      value: 'Mediana',
+                      groupValue: tallaSeleccionada,
+                      onChanged: (val) =>
+                          setState(() => tallaSeleccionada = val!),
+                    ),
+                    const Text('Mediana'),
+                  ],
                 ),
-                Expanded(
-                  child: RadioListTile<String>(
-                    title: const Text('Grande'),
-                    value: 'Grande',
-                    groupValue: tallaSeleccionada,
-                    onChanged: (val) => setState(() => tallaSeleccionada = val!),
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Radio<String>(
+                      value: 'Grande',
+                      groupValue: tallaSeleccionada,
+                      onChanged: (val) =>
+                          setState(() => tallaSeleccionada = val!),
+                    ),
+                    const Text('Grande'),
+                  ],
                 ),
-                Expanded(
-                  child: RadioListTile<String>(
-                    title: const Text('Familiar'),
-                    value: 'Familiar',
-                    groupValue: tallaSeleccionada,
-                    onChanged: (val) => setState(() => tallaSeleccionada = val!),
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Radio<String>(
+                      value: 'Familiar',
+                      groupValue: tallaSeleccionada,
+                      onChanged: (val) =>
+                          setState(() => tallaSeleccionada = val!),
+                    ),
+                    const Text('Familiar'),
+                  ],
                 ),
               ],
             ),
@@ -93,7 +108,13 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
                   if (cantidad > 1) setState(() => cantidad--);
                 },
               ),
-              Text('$cantidad', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(
+                '$cantidad',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline, size: 32),
                 onPressed: () => setState(() => cantidad++),
@@ -106,18 +127,21 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+              ),
               onPressed: () {
                 // Agregar al carrito usando el Provider
                 context.read<PedidosProvider>().agregarAlCarrito(
                   producto1: widget.producto,
-                  producto2: widget.producto2, // Envía el segundo producto al Provider
+                  producto2:
+                      widget.producto2, // Envía el segundo producto al Provider
                   cantidad: cantidad,
                   talla: esPizza ? tallaSeleccionada : 'Única',
                 );
-                
+
                 Navigator.pop(context); // Cierra el modal
-                
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('$tituloProducto agregado al pedido'),
@@ -125,7 +149,10 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
                   ),
                 );
               },
-              child: const Text('Añadir al Pedido', style: TextStyle(fontSize: 18, color: Colors.white)),
+              child: const Text(
+                'Añadir al Pedido',
+                style: TextStyle(fontSize: 18, color: Colors.white),
+              ),
             ),
           ),
         ],

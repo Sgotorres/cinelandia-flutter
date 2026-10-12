@@ -1,15 +1,20 @@
 // lib/data/datasources/remote_pedidos_datasource.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/pedido_detalle_model.dart';
-import '../../core/errors/exceptions.dart'; 
+import '../../core/errors/exceptions.dart';
 
 class RemotePedidosDataSource {
   final SupabaseClient _supabase;
 
   RemotePedidosDataSource({SupabaseClient? supabaseClient})
-      : _supabase = supabaseClient ?? Supabase.instance.client;
+    : _supabase = supabaseClient ?? Supabase.instance.client;
 
-  Future<int> crearPedido(int mesaId, List<PedidoDetalleModel> detalles, {int? pedidoIdExistente}) async {
+  Future<int> crearPedido(
+    int mesaId,
+    List<PedidoDetalleModel> detalles, {
+    int? pedidoIdExistente,
+  }) async {
     int? pedidoIdCreado;
 
     try {
@@ -50,11 +55,14 @@ class RemotePedidosDataSource {
         } catch (_) {}
       }
       // El DataSource lanza Excepciones, no Failures
-      throw ServerException('Fallo al registrar la orden: $e'); 
+      throw ServerException('Fallo al registrar la orden: $e');
     }
   }
 
-  Future<void> eliminarDetalleYActualizarPedido(int detalleId, int pedidoId) async {
+  Future<void> eliminarDetalleYActualizarPedido(
+    int detalleId,
+    int pedidoId,
+  ) async {
     try {
       await _supabase.from('detalles_pedido').delete().eq('id', detalleId);
 
@@ -65,7 +73,10 @@ class RemotePedidosDataSource {
           .limit(1);
 
       if (response.isEmpty) {
-        await _supabase.from('pedidos').update({'estado': 'cancelada'}).eq('id', pedidoId);
+        await _supabase
+            .from('pedidos')
+            .update({'estado': 'cancelada'})
+            .eq('id', pedidoId);
       }
     } catch (e) {
       throw ServerException('Error al eliminar el producto: $e');
@@ -74,20 +85,29 @@ class RemotePedidosDataSource {
 
   Future<void> actualizarEstadoPedido(int pedidoId, String nuevoEstado) async {
     try {
-      await _supabase.from('pedidos').update({'estado': nuevoEstado}).eq('id', pedidoId);
+      await _supabase
+          .from('pedidos')
+          .update({'estado': nuevoEstado})
+          .eq('id', pedidoId);
     } catch (e) {
       throw ServerException('Error al actualizar estado: $e');
     }
   }
 
   // --- STREAMS ORIGINALES ---
-  
+
   Stream<List<Map<String, dynamic>>> obtenerTodosLosPedidosStream() {
-    return _supabase.from('pedidos').stream(primaryKey: ['id']).order('fecha', ascending: false);
+    return _supabase
+        .from('pedidos')
+        .stream(primaryKey: ['id'])
+        .order('fecha', ascending: false);
   }
 
   Stream<List<Map<String, dynamic>>> obtenerDetallesPedidoStream(int pedidoId) {
-    return _supabase.from('detalles_pedido').stream(primaryKey: ['id']).eq('pedido_id', pedidoId);
+    return _supabase
+        .from('detalles_pedido')
+        .stream(primaryKey: ['id'])
+        .eq('pedido_id', pedidoId);
   }
 
   Stream<String> obtenerEstadoPedidoStream(int pedidoId) {
@@ -95,13 +115,16 @@ class RemotePedidosDataSource {
         .from('pedidos')
         .stream(primaryKey: ['id'])
         .eq('id', pedidoId)
-        .map((data) => data.isEmpty ? 'pendiente' : data.first['estado'] ?? 'pendiente');
+        .map(
+          (data) =>
+              data.isEmpty ? 'pendiente' : data.first['estado'] ?? 'pendiente',
+        );
   }
 
   // --- NUEVAS OPTIMIZACIONES DE RENDIMIENTO ---
 
   /// Llamada al RPC para delegar los cálculos estadísticos a la base de datos
-  /// Ideal para el panel de administración.
+  /// Ideal para el panel de administración
   Future<Map<String, dynamic>> obtenerEstadisticasMesas() async {
     try {
       final response = await _supabase.rpc('obtener_estadisticas_mesas');
@@ -120,6 +143,6 @@ class RemotePedidosDataSource {
         // Filtramos estados inactivos en el servidor (Costo 0 en RAM local)
         .neq('estado', 'pagado')
         .neq('estado', 'cancelada')
-        .order('fecha', ascending: false);
+        .order('fecha', ascending: true); // Cambiado a true
   }
 }
