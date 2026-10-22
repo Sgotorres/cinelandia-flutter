@@ -1,4 +1,4 @@
-// lib/providers/auth_provider.dart
+// lib/presentation/auth/providers/auth_provider.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';

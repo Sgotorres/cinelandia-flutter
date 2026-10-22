@@ -1,7 +1,7 @@
 // lib/presentation/mesero/widgets/mesero_ajustes_tab.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 
 class MeseroAjustesTab extends StatelessWidget {
   const MeseroAjustesTab({super.key});

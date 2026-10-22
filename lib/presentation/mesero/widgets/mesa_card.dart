@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/routes/app_routes.dart';
-import '../../../providers/pedidos_provider.dart';
+import '../providers/pedidos_provider.dart';
 
 class MesaCard extends StatelessWidget {
   final int mesaId;

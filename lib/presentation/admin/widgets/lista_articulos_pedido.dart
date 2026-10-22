@@ -1,8 +1,8 @@
 // lib/presentation/admin/widgets/lista_articulos_pedido.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/menu_provider.dart';
-import '../../../providers/pedidos_provider.dart';
+import '../../shared/providers/menu_provider.dart';
+import '../../mesero/providers/pedidos_provider.dart';
 import 'articulo_pedido_row.dart';
 
 class ListaArticulosPedido extends StatefulWidget {

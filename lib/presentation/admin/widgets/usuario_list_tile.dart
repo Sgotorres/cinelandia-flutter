@@ -1,9 +1,9 @@
 // lib/presentation/admin/widgets/usuario_list_tile.dart
 import 'package:flutter/material.dart';
-import '../../../data/models/usuario_model.dart';
+import '../../../domain/entities/usuario.dart';
 
 class UsuarioListTile extends StatelessWidget {
-  final UsuarioModel usuario;
+  final Usuario usuario;
   final VoidCallback onDelete;
 
   const UsuarioListTile({

@@ -1,8 +1,8 @@
 // lib/presentation/admin/screens/admin_dashboard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
-import '../../shared/widgets/campanita_widget.dart'; // <-- 1. IMPORT AGREGADO
+import '../../auth/providers/auth_provider.dart';
+import '../../shared/widgets/campanita_widget.dart';
 
 import 'admin_pedidos_screen.dart';
 import 'admin_caja_screen.dart';
@@ -27,7 +27,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
         backgroundColor: Colors.indigo,
         actions: [
-          // 2. COLOCADO EN EL APPBAR JUNTO AL BOTÓN DE SALIR
           const CampanitaWidget(iconColor: Colors.white),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
@@ -40,8 +39,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         index: _selectedIndex,
         children: const [
           AdminPedidosScreen(), // Índice 0: Cocina
-          AdminCajaScreen(),    // Índice 1: Caja
-          AdminMenuScreen(),    // Índice 2: Gestión
+          AdminCajaScreen(), // Índice 1: Caja
+          AdminMenuScreen(), // Índice 2: Gestión
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

@@ -1,5 +1,5 @@
 // lib/presentation/mesero/widgets/resumen_estado_mesas.dart
-import '../../../data/models/mesa_model.dart';
+import '../../../domain/entities/mesa.dart';
 
 class ResumenEstadoMesas {
   final int disponibles;
@@ -20,7 +20,7 @@ class ResumenEstadoMesas {
 
   /// Cruza las mesas con los pedidos activos en una sola pasada
   factory ResumenEstadoMesas.calcular({
-    required List<MesaModel> mesasActivas,
+    required List<Mesa> mesasActivas,
     required List<Map<String, dynamic>> pedidosActivos,
   }) {
     int disp = 0, pend = 0, hor = 0, lis = 0, com = 0;
@@ -35,7 +35,8 @@ class ResumenEstadoMesas {
         mapaPedidos[mesa.id] = pedido;
       }
 
-      final estado = pedido?['estado']?.toString().toLowerCase() ?? 'disponible';
+      final estado =
+          pedido?['estado']?.toString().toLowerCase() ?? 'disponible';
 
       switch (estado) {
         case 'pendiente':

@@ -1,7 +1,8 @@
+// lib/presentation/mesero/screens/resumen_pedido_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/pedidos_provider.dart';
-import '../../../providers/menu_provider.dart';
+import '../providers/pedidos_provider.dart';
+import '../../shared/providers/menu_provider.dart';
 import '../widgets/carrito_item_tile.dart';
 import '../widgets/resumen_bottom_bar.dart';
 
@@ -15,11 +16,14 @@ class ResumenPedidoScreen extends StatelessWidget {
     final carrito = pedidosProvider.carrito;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50, // Fondo neutro
+      backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Resumen de la Orden', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Resumen de la Orden',
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
-        elevation: 0, // Quitamos la sombra del AppBar
+        elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: carrito.isEmpty
@@ -27,11 +31,22 @@ class ResumenPedidoScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.receipt_long, size: 80, color: Colors.grey.shade300),
+                  Icon(
+                    Icons.receipt_long,
+                    size: 80,
+                    color: Colors.grey.shade300,
+                  ),
                   const SizedBox(height: 16),
-                  Text('El carrito está vacío', style: TextStyle(fontSize: 18, color: Colors.grey.shade500, fontWeight: FontWeight.w600)),
+                  Text(
+                    'El carrito está vacío',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey.shade500,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
-              )
+              ),
             )
           : Column(
               children: [
@@ -43,7 +58,8 @@ class ResumenPedidoScreen extends StatelessWidget {
                       return CarritoItemTile(
                         item: carrito[index],
                         menuProvider: menuProvider,
-                        onEliminar: () => pedidosProvider.removerDelCarrito(index),
+                        onEliminar: () =>
+                            pedidosProvider.removerDelCarrito(index),
                       );
                     },
                   ),

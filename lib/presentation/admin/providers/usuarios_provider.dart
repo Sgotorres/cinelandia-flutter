@@ -1,8 +1,9 @@
+// lib/presentation/admin/providers/usuarios_provider.dart
 import 'package:flutter/material.dart';
 
-import '../data/models/usuario_model.dart';
-import '../data/repositories/usuarios_repository.dart';
-import '../core/utils/result.dart';
+import '../../../domain/entities/usuario.dart';
+import '../../../data/repositories/usuarios_repository.dart';
+import '../../../core/utils/result.dart';
 
 class UsuariosProvider extends ChangeNotifier {
   final UsuariosRepository _usuariosRepository;
@@ -10,7 +11,7 @@ class UsuariosProvider extends ChangeNotifier {
   UsuariosProvider({required UsuariosRepository usuariosRepository})
     : _usuariosRepository = usuariosRepository;
 
-  Stream<List<UsuarioModel>> get usuariosStream =>
+  Stream<List<Usuario>> get usuariosStream =>
       _usuariosRepository.obtenerUsuariosStream();
 
   Future<String?> eliminarUsuario(int id) async {

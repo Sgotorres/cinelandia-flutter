@@ -1,8 +1,8 @@
 // lib/presentation/admin/widgets/admin_usuarios_tab.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../data/models/usuario_model.dart';
-import '../../../providers/usuarios_provider.dart';
+import '../../../domain/entities/usuario.dart';
+import '../providers/usuarios_provider.dart';
 import 'formulario_usuario_dialog.dart';
 import 'usuario_list_tile.dart';
 
@@ -71,7 +71,7 @@ class AdminUsuariosTab extends StatelessWidget {
               ),
             ),
           Expanded(
-            child: StreamBuilder<List<UsuarioModel>>(
+            child: StreamBuilder<List<Usuario>>(
               stream: usuariosProvider.usuariosStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {

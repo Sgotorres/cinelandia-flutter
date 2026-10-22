@@ -1,8 +1,8 @@
 // lib/presentation/mesero/screens/tomar_pedido_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/menu_provider.dart';
-import '../../../providers/pedidos_provider.dart';
+import '../../shared/providers/menu_provider.dart';
+import '../providers/pedidos_provider.dart';
 import '../widgets/categoria_chips.dart';
 import '../widgets/orden_bottom_bar.dart';
 import '../widgets/mitad_y_mitad_banner.dart';
@@ -31,7 +31,6 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Se usa mesaNombreSeleccionada desde el provider
     final mesa = context.watch<PedidosProvider>().mesaNombreSeleccionada;
 
     return Scaffold(
@@ -43,8 +42,18 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Mesa Seleccionada', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-            Text(mesa, style: const TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              'Mesa Seleccionada',
+              style: TextStyle(color: Colors.grey[600], fontSize: 12),
+            ),
+            Text(
+              mesa,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ),
@@ -56,10 +65,7 @@ class _TomarPedidoScreenState extends State<TomarPedidoScreen> {
             categoriaSeleccionada: categoriaActual,
             onSelected: (cat) => setState(() => categoriaActual = cat),
           ),
-          
-          if (categoriaActual == 'Pizzas')
-            const MitadYMitadBanner(),
-
+          if (categoriaActual == 'Pizzas') const MitadYMitadBanner(),
           Expanded(
             child: ProductoGrid(
               categoriaActual: categoriaActual,

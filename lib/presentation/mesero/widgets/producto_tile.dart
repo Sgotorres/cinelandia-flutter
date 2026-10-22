@@ -1,17 +1,16 @@
 // lib/presentation/mesero/widgets/producto_tile.dart
 import 'package:flutter/material.dart';
 
-import '../../../data/models/producto_model.dart';
+import '../../../domain/entities/producto.dart';
 
 class ProductoTile extends StatelessWidget {
-  final ProductoModel producto;
+  final Producto producto;
   final VoidCallback onTap;
 
   const ProductoTile({super.key, required this.producto, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    // NUEVO: Agregamos producto.precioM a la cadena de prioridad
     final precioBase =
         producto.precio ?? producto.precioM ?? producto.precioG ?? 0.0;
 
@@ -39,7 +38,7 @@ class ProductoTile extends StatelessWidget {
               const Text(
                 '🍕',
                 style: TextStyle(fontSize: 40),
-              ), // Emoji dinámico a futuro
+              ),
               const SizedBox(height: 8),
               Text(
                 producto.nombre,

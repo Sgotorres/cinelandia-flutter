@@ -1,3 +1,5 @@
+import '../../domain/entities/pedido_detalle.dart';
+
 class PedidoDetalleModel {
   final int? id;
   final int? pedidoId;
@@ -49,5 +51,33 @@ class PedidoDetalleModel {
       if (nota != null && nota!.isNotEmpty) 'nota': nota,
       if (precioExtra > 0) 'precio_extra': precioExtra,
     };
+  }
+
+  PedidoDetalle toEntity() {
+    return PedidoDetalle(
+      id: id,
+      pedidoId: pedidoId,
+      productoId: productoId,
+      cantidad: cantidad,
+      precioUnitario: precioUnitario,
+      talla: talla,
+      producto2Id: producto2Id,
+      nota: nota,
+      precioExtra: precioExtra,
+    );
+  }
+
+  factory PedidoDetalleModel.fromEntity(PedidoDetalle entity) {
+    return PedidoDetalleModel(
+      id: entity.id,
+      pedidoId: entity.pedidoId,
+      productoId: entity.productoId,
+      cantidad: entity.cantidad,
+      precioUnitario: entity.precioUnitario,
+      talla: entity.talla,
+      producto2Id: entity.producto2Id,
+      nota: entity.nota,
+      precioExtra: entity.precioExtra,
+    );
   }
 }

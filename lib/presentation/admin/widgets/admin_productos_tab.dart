@@ -2,11 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../providers/menu_provider.dart';
+import '../../shared/providers/menu_provider.dart';
 import 'formulario_producto_dialog.dart';
 import 'producto_list_tile.dart';
-
-// Fíjate que eliminamos la importación de supabase_flutter por completo
 
 class AdminProductosTab extends StatelessWidget {
   const AdminProductosTab({super.key});
@@ -16,7 +14,6 @@ class AdminProductosTab extends StatelessWidget {
     final ancho = MediaQuery.of(context).size.width;
     final esMovil = ancho < 600;
 
-    // Conectamos la vista con el provider
     final menuProvider = context.watch<MenuProvider>();
 
     void abrirFormularioNuevo() {
@@ -84,7 +81,6 @@ class AdminProductosTab extends StatelessWidget {
               ),
             ),
           Expanded(
-            // Evaluamos el estado desde el provider
             child: menuProvider.isLoading && menuProvider.productos.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
@@ -93,7 +89,7 @@ class AdminProductosTab extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final p = menuProvider.productos[index];
                       return ProductoListTile(
-                        producto: p.toJson(), // Pasamos a JSON temporalmente para que tu ProductoListTile actual funcione
+                        producto: p.toJson(),
                         onEdit: () => showDialog(
                           context: context,
                           builder: (_) =>

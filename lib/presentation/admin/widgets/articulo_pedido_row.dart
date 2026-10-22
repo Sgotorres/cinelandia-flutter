@@ -1,6 +1,6 @@
 // lib/presentation/admin/widgets/articulo_pedido_row.dart
 import 'package:flutter/material.dart';
-import '../../../providers/menu_provider.dart';
+import '../../shared/providers/menu_provider.dart';
 
 class ArticuloPedidoRow extends StatelessWidget {
   final Map<String, dynamic> item;
@@ -82,7 +82,10 @@ class ArticuloPedidoRow extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.orange.shade50,
                         borderRadius: BorderRadius.circular(6),

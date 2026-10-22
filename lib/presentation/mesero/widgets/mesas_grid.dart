@@ -1,10 +1,10 @@
 // lib/presentation/mesero/widgets/mesas_grid.dart
 import 'package:flutter/material.dart';
-import '../../../data/models/mesa_model.dart';
+import '../../../domain/entities/mesa.dart';
 import 'mesa_card.dart';
 
 class MesasGrid extends StatelessWidget {
-  final List<MesaModel> mesasActivas;
+  final List<Mesa> mesasActivas;
   final Map<int, Map<String, dynamic>> pedidoPorMesa;
 
   const MesasGrid({

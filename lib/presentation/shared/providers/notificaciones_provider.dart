@@ -1,8 +1,8 @@
-// lib/providers/notificaciones_provider.dart
+// lib/presentation/shared/providers/notificaciones_provider.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../core/utils/sound_service.dart';
-import '../data/repositories/notificaciones_repository.dart';
+import '../../../core/utils/sound_service.dart';
+import '../../../data/repositories/notificaciones_repository.dart';
 
 class NotificacionesProvider extends ChangeNotifier {
   final NotificacionesRepository _repository;

@@ -1,7 +1,8 @@
+// lib/presentation/mesero/widgets/resumen_bottom_bar.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_routes.dart';
-import '../../../providers/pedidos_provider.dart';
+import '../providers/pedidos_provider.dart';
 
 class ResumenBottomBar extends StatelessWidget {
   final PedidosProvider pedidosProvider;
@@ -16,7 +17,11 @@ class ResumenBottomBar extends StatelessWidget {
         color: Colors.white,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 20, offset: const Offset(0, -5))
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
         ],
       ),
       child: SafeArea(
@@ -27,10 +32,21 @@ class ResumenBottomBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text('Total a pagar', style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w600)),
+                const Text(
+                  'Total a pagar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 Text(
                   '\$${pedidosProvider.totalPedido.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.green),
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.green,
+                  ),
                 ),
               ],
             ),
@@ -42,7 +58,9 @@ class ResumenBottomBar extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
                 onPressed: pedidosProvider.isLoading
                     ? null
@@ -68,8 +86,22 @@ class ResumenBottomBar extends StatelessWidget {
                         }
                       },
                 child: pedidosProvider.isLoading
-                    ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3))
-                    : const Text('Enviar a Cocina', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                      )
+                    : const Text(
+                        'Enviar a Cocina',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],

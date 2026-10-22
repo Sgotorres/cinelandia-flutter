@@ -1,5 +1,6 @@
 // lib/presentation/admin/widgets/modal_detalles_ticket.dart
 import 'package:flutter/material.dart';
+import '../../mesero/widgets/modal_recibo_qr.dart';
 import 'lista_articulos_pedido.dart';
 
 class ModalDetallesTicket extends StatelessWidget {
@@ -41,26 +42,73 @@ class ModalDetallesTicket extends StatelessWidget {
                     children: [
                       Text(
                         nombreMesa,
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.black87,
+                        ),
                       ),
                       Text(
                         'Ticket #$pedidoId',
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ],
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.grey.shade100, shape: BoxShape.circle),
-                      child: const Icon(Icons.close, size: 20, color: Colors.black54),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Generar Recibo QR',
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => ModalReciboQr(
+                              pedidoId: pedidoId,
+                              mesaNombre: nombreMesa,
+                            ),
+                          );
+                        },
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.indigo.shade50,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.qr_code_2,
+                            size: 20,
+                            color: Colors.indigo,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            size: 20,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const Divider(height: 32),
-              const Text('Artículos vendidos:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text(
+                'Artículos vendidos:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               const SizedBox(height: 12),
               Flexible(
                 child: SingleChildScrollView(
@@ -71,10 +119,21 @@ class ModalDetallesTicket extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total Cobrado', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
+                  const Text(
+                    'Total Cobrado',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
                   Text(
                     '\$${total.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.green),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.green,
+                    ),
                   ),
                 ],
               ),

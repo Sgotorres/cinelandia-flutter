@@ -1,10 +1,10 @@
 // lib/presentation/mesero/widgets/carrito_item_tile.dart
 import 'package:flutter/material.dart';
-import '../../../data/models/pedido_detalle_model.dart';
-import '../../../providers/menu_provider.dart';
+import '../../../domain/entities/pedido_detalle.dart';
+import '../../shared/providers/menu_provider.dart';
 
 class CarritoItemTile extends StatelessWidget {
-  final PedidoDetalleModel item;
+  final PedidoDetalle item;
   final MenuProvider menuProvider;
   final VoidCallback onEliminar;
 
@@ -19,17 +19,22 @@ class CarritoItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     String nombreP1 = 'Producto ${item.productoId}';
     try {
-      nombreP1 = menuProvider.productos.firstWhere((p) => p.id == item.productoId).nombre;
+      nombreP1 = menuProvider.productos
+          .firstWhere((p) => p.id == item.productoId)
+          .nombre;
     } catch (_) {}
 
     String? nombreP2;
     if (item.producto2Id != null) {
       try {
-        nombreP2 = menuProvider.productos.firstWhere((p) => p.id == item.producto2Id).nombre;
+        nombreP2 = menuProvider.productos
+            .firstWhere((p) => p.id == item.producto2Id)
+            .nombre;
       } catch (_) {}
     }
 
-    final nombreAMostrar = nombreP2 != null ? '1/2 $nombreP1 y 1/2 $nombreP2' : nombreP1;
+    final nombreAMostrar =
+        nombreP2 != null ? '1/2 $nombreP1 y 1/2 $nombreP2' : nombreP1;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -47,12 +52,11 @@ class CarritoItemTile extends StatelessWidget {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        // Badge de cantidad redondeado
         leading: Container(
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF2FE), // Tono lavanda suave a juego con el tema
+            color: const Color(0xFFEFF2FE),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(
@@ -66,19 +70,19 @@ class CarritoItemTile extends StatelessWidget {
             ),
           ),
         ),
-        // Nombre del producto
         title: Text(
           nombreAMostrar,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
-        // Tamaño / Unidad y Nota
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                item.talla != null && item.talla != 'Única' && item.talla != 'null'
+                item.talla != null &&
+                        item.talla != 'Única' &&
+                        item.talla != 'null'
                     ? 'Tamaño: ${item.talla}'
                     : 'Unidad',
                 style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
@@ -111,7 +115,6 @@ class CarritoItemTile extends StatelessWidget {
             ],
           ),
         ),
-        // Precio + Botón circular con icono de eliminar
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

@@ -1,7 +1,7 @@
 // lib/presentation/mesero/widgets/mesero_app_bar.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../../shared/widgets/campanita_widget.dart';
 
 class MeseroAppBar extends StatelessWidget implements PreferredSizeWidget {

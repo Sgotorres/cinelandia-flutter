@@ -1,3 +1,5 @@
+import '../../domain/entities/pedido.dart';
+
 class PedidoModel {
   final int? id;
   final int mesaId;
@@ -34,5 +36,27 @@ class PedidoModel {
       if (estado != null) 'estado': estado,
       if (fecha != null) 'fecha': fecha,
     };
+  }
+
+  Pedido toEntity() {
+    return Pedido(
+      id: id,
+      mesaId: mesaId,
+      mesaNombre: mesaNombre,
+      total: total,
+      estado: estado,
+      fecha: fecha,
+    );
+  }
+
+  factory PedidoModel.fromEntity(Pedido entity) {
+    return PedidoModel(
+      id: entity.id,
+      mesaId: entity.mesaId,
+      mesaNombre: entity.mesaNombre,
+      total: entity.total,
+      estado: entity.estado,
+      fecha: entity.fecha,
+    );
   }
 }

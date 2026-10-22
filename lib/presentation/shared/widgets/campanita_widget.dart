@@ -1,8 +1,8 @@
 // lib/presentation/shared/widgets/campanita_widget.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
-import '../../../providers/notificaciones_provider.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../providers/notificaciones_provider.dart';
 import 'panel_notificaciones_modal.dart';
 
 class CampanitaWidget extends StatefulWidget {

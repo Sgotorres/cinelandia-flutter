@@ -1,7 +1,6 @@
 // lib/domain/usecases/gestionar_carrito_usecase.dart
-import '../../data/models/pedido_detalle_model.dart';
-import '../../data/models/producto_model.dart';
-import '../entities/producto.dart'; 
+import '../entities/pedido_detalle.dart';
+import '../entities/producto.dart';
 import 'calcular_precio_item_usecase.dart';
 
 class GestionarCarritoUseCase {
@@ -9,66 +8,40 @@ class GestionarCarritoUseCase {
 
   GestionarCarritoUseCase(this._calcularPrecioUseCase);
 
-  List<PedidoDetalleModel> agregarItem({
-    required List<PedidoDetalleModel> carritoActual,
-    required ProductoModel producto1,
-    ProductoModel? producto2,
+  List<PedidoDetalle> agregarItem({
+    required List<PedidoDetalle> carritoActual,
+    required Producto producto1,
+    Producto? producto2,
     required int cantidad,
     required String talla,
     String? nota,
     double precioExtra = 0.0,
   }) {
-    // 1. Mapear producto1 a la entidad
-    final entidadP1 = Producto(
-      id: producto1.id,
-      nombre: producto1.nombre,
-      precio: producto1.precio,
-      precioM: producto1.precioM,
-      precioG: producto1.precioG,
-      precioF: producto1.precioF,
-      volumen: producto1.volumen,
-      categoria: producto1.categoria,
-    );
-
-    // 2. Mapear producto2 si existe (Mitad y Mitad)
-    Producto? entidadP2;
-    if (producto2 != null) {
-      entidadP2 = Producto(
-        id: producto2.id,
-        nombre: producto2.nombre,
-        precio: producto2.precio,
-        precioM: producto2.precioM, 
-        precioG: producto2.precioG,
-        precioF: producto2.precioF,
-        volumen: producto2.volumen, 
-        categoria: producto2.categoria,
-      );
-    }
-
-    // 3. Calcular precio unitario con la regla de negocio + precio extra
+    // 1. Calcular precio unitario con la regla de negocio + precio extra
     final precioUnitario = _calcularPrecioUseCase.execute(
-      producto1: entidadP1,
-      producto2: entidadP2,
+      producto1: producto1,
+      producto2: producto2,
       talla: talla,
     ) + precioExtra;
 
-    final List<PedidoDetalleModel> nuevoCarrito = List.from(carritoActual);
+    final List<PedidoDetalle> nuevoCarrito = List.from(carritoActual);
 
-    final String? notaNormalizada = (nota != null && nota.trim().isNotEmpty) ? nota.trim() : null;
+    final String? notaNormalizada =
+        (nota != null && nota.trim().isNotEmpty) ? nota.trim() : null;
 
-    // 4. Buscar si el producto ya existe en el carrito (solo agrupa si nota y precioExtra coinciden)
-    final indexExistente = nuevoCarrito.indexWhere((item) => 
-      item.productoId == producto1.id && 
-      item.producto2Id == producto2?.id && 
-      item.talla == talla &&
-      (item.nota?.trim().toLowerCase() ?? '') == (notaNormalizada?.toLowerCase() ?? '') &&
-      item.precioExtra == precioExtra
-    );
+    // 2. Buscar si el producto ya existe en el carrito (solo agrupa si nota y precioExtra coinciden)
+    final indexExistente = nuevoCarrito.indexWhere((item) =>
+        item.productoId == producto1.id &&
+        item.producto2Id == producto2?.id &&
+        item.talla == talla &&
+        (item.nota?.trim().toLowerCase() ?? '') ==
+            (notaNormalizada?.toLowerCase() ?? '') &&
+        item.precioExtra == precioExtra);
 
     if (indexExistente != -1) {
       // Si existe, reemplazamos la línea incrementando la cantidad
       final itemPrevio = nuevoCarrito[indexExistente];
-      nuevoCarrito[indexExistente] = PedidoDetalleModel(
+      nuevoCarrito[indexExistente] = PedidoDetalle(
         id: itemPrevio.id,
         pedidoId: itemPrevio.pedidoId,
         productoId: itemPrevio.productoId,
@@ -81,7 +54,7 @@ class GestionarCarritoUseCase {
       );
     } else {
       // Si es un producto nuevo en esta orden, lo añadimos normalmente
-      nuevoCarrito.add(PedidoDetalleModel(
+      nuevoCarrito.add(PedidoDetalle(
         productoId: producto1.id,
         producto2Id: producto2?.id,
         cantidad: cantidad,
@@ -94,12 +67,18 @@ class GestionarCarritoUseCase {
 
     return nuevoCarrito;
   }
-  
-  List<PedidoDetalleModel> removerItem(List<PedidoDetalleModel> carritoActual, int index) {
+
+  List<PedidoDetalle> removerItem(
+    List<PedidoDetalle> carritoActual,
+    int index,
+  ) {
     return List.from(carritoActual)..removeAt(index);
   }
 
-  double calcularTotal(List<PedidoDetalleModel> carrito) {
-    return carrito.fold(0, (total, item) => total + (item.precioUnitario * item.cantidad));
+  double calcularTotal(List<PedidoDetalle> carrito) {
+    return carrito.fold(
+      0,
+      (total, item) => total + (item.precioUnitario * item.cantidad),
+    );
   }
 }

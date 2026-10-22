@@ -1,26 +1,26 @@
-// lib/providers/menu_provider.dart
+// lib/presentation/shared/providers/menu_provider.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../core/utils/result.dart';
-import '../data/models/producto_model.dart';
-import '../data/repositories/menu_repository.dart';
+import '../../../core/utils/result.dart';
+import '../../../domain/entities/producto.dart';
+import '../../../data/repositories/menu_repository.dart';
 
 class MenuProvider extends ChangeNotifier {
   final MenuRepository _menuRepository;
-  StreamSubscription<List<ProductoModel>>? _menuSubscription;
+  StreamSubscription<List<Producto>>? _menuSubscription;
 
   MenuProvider({MenuRepository? menuRepository})
     : _menuRepository = menuRepository ?? MenuRepository();
 
-  List<ProductoModel> _productos = [];
+  List<Producto> _productos = [];
   bool _isLoading = false;
   String _errorMessage = '';
 
-  List<ProductoModel> get productos => _productos;
+  List<Producto> get productos => _productos;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
 
-  List<ProductoModel> productosPorCategoria(String categoria) {
+  List<Producto> productosPorCategoria(String categoria) {
     return _productos
         .where((p) => p.categoria.toLowerCase() == categoria.toLowerCase())
         .toList();

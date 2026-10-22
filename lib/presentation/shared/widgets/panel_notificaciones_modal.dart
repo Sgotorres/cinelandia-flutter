@@ -1,7 +1,7 @@
 // lib/presentation/shared/widgets/panel_notificaciones_modal.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/notificaciones_provider.dart';
+import '../providers/notificaciones_provider.dart';
 
 class PanelNotificacionesModal extends StatefulWidget {
   final String miRol;
@@ -73,7 +73,10 @@ class _PanelNotificacionesModalState extends State<PanelNotificacionesModal> {
           Expanded(
             child: notificaciones.isEmpty
                 ? const Center(
-                    child: Text('No tienes llamadas pendientes', style: TextStyle(color: Colors.grey)),
+                    child: Text(
+                      'No tienes llamadas pendientes',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   )
                 : ListView.builder(
                     itemCount: notificaciones.length,
@@ -87,12 +90,22 @@ class _PanelNotificacionesModalState extends State<PanelNotificacionesModal> {
                           side: BorderSide(color: Colors.orange.shade200),
                         ),
                         child: ListTile(
-                          leading: const Icon(Icons.notifications_active, color: Colors.orange),
-                          title: Text(noti['mensaje']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          leading: const Icon(
+                            Icons.notifications_active,
+                            color: Colors.orange,
+                          ),
+                          title: Text(
+                            noti['mensaje']?.toString() ?? '',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                           trailing: IconButton(
-                            icon: const Icon(Icons.check_circle_outline, color: Colors.green),
+                            icon: const Icon(
+                              Icons.check_circle_outline,
+                              color: Colors.green,
+                            ),
                             tooltip: 'Marcar como atendido',
-                            onPressed: () => notiProvider.marcarComoLeida(noti['id'] as int),
+                            onPressed: () =>
+                                notiProvider.marcarComoLeida(noti['id'] as int),
                           ),
                         ),
                       );
@@ -106,12 +119,18 @@ class _PanelNotificacionesModalState extends State<PanelNotificacionesModal> {
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
               icon: const Icon(Icons.notifications_active, color: Colors.white),
               label: Text(
                 esAdmin ? 'Timbrar a Meseros' : 'Timbrar a Administración',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               onPressed: _enviando ? null : _accionTimbrar,
             ),

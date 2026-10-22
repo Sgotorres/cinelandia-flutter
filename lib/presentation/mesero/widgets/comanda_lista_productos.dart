@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../providers/menu_provider.dart';
-import '../../../providers/pedidos_provider.dart';
+import '../../shared/providers/menu_provider.dart';
+import '../providers/pedidos_provider.dart';
 import 'comanda_item_tile.dart';
 
 class ComandaListaProductos extends StatefulWidget {
@@ -31,7 +31,6 @@ class _ComandaListaProductosState extends State<ComandaListaProductos> {
     if (_isDeleting) return;
     setState(() => _isDeleting = true);
 
-    // Si es el último producto, cerramos el modal antes de borrar
     if (totalItems == 1 && mounted && Navigator.canPop(context)) {
       Navigator.pop(context);
     }
@@ -53,7 +52,6 @@ class _ComandaListaProductosState extends State<ComandaListaProductos> {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos context.watch por si el menú se actualiza mientras el modal está abierto
     final menuProvider = context.watch<MenuProvider>();
 
     return Expanded(
@@ -63,7 +61,7 @@ class _ComandaListaProductosState extends State<ComandaListaProductos> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           final detalles = snapshot.data ?? [];
           if (detalles.isEmpty) return const SizedBox.shrink();
 
@@ -73,22 +71,29 @@ class _ComandaListaProductosState extends State<ComandaListaProductos> {
             itemBuilder: (context, index) {
               final item = detalles[index];
               final int cantidad = item['cantidad'] ?? 1;
-              final double subtotal = cantidad * (item['precio_unitario'] as num).toDouble();
+              final double subtotal =
+                  cantidad * (item['precio_unitario'] as num).toDouble();
               final String talla = item['talla'] ?? 'Única';
 
               String nombreP1 = 'Producto ${item['producto_id']}';
               try {
-                nombreP1 = menuProvider.productos.firstWhere((p) => p.id == item['producto_id']).nombre;
+                nombreP1 = menuProvider.productos
+                    .firstWhere((p) => p.id == item['producto_id'])
+                    .nombre;
               } catch (_) {}
 
               String? nombreP2;
               if (item['producto_2_id'] != null) {
                 try {
-                  nombreP2 = menuProvider.productos.firstWhere((p) => p.id == item['producto_2_id']).nombre;
+                  nombreP2 = menuProvider.productos
+                      .firstWhere((p) => p.id == item['producto_2_id'])
+                      .nombre;
                 } catch (_) {}
               }
 
-              final nombreAMostrar = nombreP2 != null ? '1/2 $nombreP1 y 1/2 $nombreP2' : nombreP1;
+              final nombreAMostrar = nombreP2 != null
+                  ? '1/2 $nombreP1 y 1/2 $nombreP2'
+                  : nombreP1;
               final String? nota = item['nota'];
               final double precioExtra = item['precio_extra'] != null
                   ? (item['precio_extra'] as num).toDouble()
@@ -102,7 +107,8 @@ class _ComandaListaProductosState extends State<ComandaListaProductos> {
                 nota: nota,
                 precioExtra: precioExtra,
                 isDeleting: _isDeleting,
-                onEliminar: () => _eliminarProducto(item['id'], detalles.length),
+                onEliminar: () =>
+                    _eliminarProducto(item['id'], detalles.length),
               );
             },
           );

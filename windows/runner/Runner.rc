@@ -92,7 +92,7 @@ BEGIN
             VALUE "CompanyName", "com.example" "\0"
             VALUE "FileDescription", "Pizza Planeta" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "cinelandia" "\0"
+            VALUE "InternalName", "com.pizzaplaneta.pos" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "cinelandia.exe" "\0"
             VALUE "ProductName", "Pizza Planeta" "\0"

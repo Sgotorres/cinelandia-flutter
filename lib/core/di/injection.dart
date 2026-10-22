@@ -2,9 +2,11 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// DataSources
+// DataSources y Servicios
 import '../../data/datasources/local_pedidos_datasource.dart';
 import '../../data/datasources/remote_pedidos_datasource.dart';
+import '../../data/services/digital_receipt_service.dart';
+import '../../domain/services/receipt_service.dart';
 
 // Repositorios
 import '../../data/repositories/pedidos_repository.dart';
@@ -15,16 +17,17 @@ import '../../data/repositories/notificaciones_repository.dart';
 
 // Casos de Uso
 import '../../domain/usecases/calcular_precio_item_usecase.dart';
+import '../../domain/usecases/generar_recibo_usecase.dart';
 import '../../domain/usecases/gestionar_carrito_usecase.dart';
 import '../../domain/usecases/tomar_pedido_usecase.dart';
 
 // Providers
-import '../../providers/auth_provider.dart';
-import '../../providers/menu_provider.dart';
-import '../../providers/mesas_provider.dart';
-import '../../providers/pedidos_provider.dart';
-import '../../providers/usuarios_provider.dart';
-import '../../providers/notificaciones_provider.dart';
+import '../../presentation/auth/providers/auth_provider.dart';
+import '../../presentation/admin/providers/usuarios_provider.dart';
+import '../../presentation/mesero/providers/pedidos_provider.dart';
+import '../../presentation/shared/providers/menu_provider.dart';
+import '../../presentation/shared/providers/mesas_provider.dart';
+import '../../presentation/shared/providers/notificaciones_provider.dart';
 import '../utils/sound_service.dart';
 
 final sl = GetIt.instance; // sl = Service Locator
@@ -37,6 +40,9 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RemotePedidosDataSource(supabaseClient: sl()));
   sl.registerLazySingleton(() => LocalPedidosDataSource());
   sl.registerLazySingleton(() => SoundService());
+  sl.registerLazySingleton<ReceiptService>(
+    () => DigitalReceiptService(supabaseClient: sl()),
+  );
 
   // 3. Repositorios
   sl.registerLazySingleton(() => MenuRepository(supabaseClient: sl()));
@@ -53,6 +59,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => CalcularPrecioItemUseCase());
   sl.registerLazySingleton(() => GestionarCarritoUseCase(sl()));
   sl.registerLazySingleton(() => TomarPedidoUseCase(sl()));
+  sl.registerLazySingleton(() => GenerarReciboUseCase(sl()));
 
   // 5. Providers
   sl.registerFactory(() => AuthProvider());

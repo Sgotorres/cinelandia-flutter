@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:cinelandia/providers/notificaciones_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,12 +13,13 @@ import 'core/routes/app_router.dart';
 // Inyección de Dependencias
 import 'core/di/injection.dart' as di;
 
-// Providers
-import 'providers/menu_provider.dart';
-import 'providers/pedidos_provider.dart';
-import 'providers/auth_provider.dart';
-import 'providers/mesas_provider.dart';
-import 'providers/usuarios_provider.dart';
+// Providers por Feature
+import 'presentation/auth/providers/auth_provider.dart';
+import 'presentation/admin/providers/usuarios_provider.dart';
+import 'presentation/mesero/providers/pedidos_provider.dart';
+import 'presentation/shared/providers/menu_provider.dart';
+import 'presentation/shared/providers/mesas_provider.dart';
+import 'presentation/shared/providers/notificaciones_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

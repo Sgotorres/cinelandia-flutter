@@ -20,9 +20,13 @@ class ProductoListTile extends StatelessWidget {
     final bool disponible = producto['disponible'] ?? true;
 
     String precioInfo = '';
-    if (producto['precio_g'] != null || producto['precio_f'] != null) {
-      precioInfo =
-          'G: \$${producto['precio_g'] ?? '-'} | F: \$${producto['precio_f'] ?? '-'}';
+    
+    // --- NUEVO: Lógica que incluye el Precio M para las Pizzas ---
+    if (producto['categoria']?.toString().toLowerCase() == 'pizzas') {
+      final m = producto['precio_m'] != null ? '\$${producto['precio_m']}' : '-';
+      final g = producto['precio_g'] != null ? '\$${producto['precio_g']}' : '-';
+      final f = producto['precio_f'] != null ? '\$${producto['precio_f']}' : '-';
+      precioInfo = 'M: $m | G: $g | F: $f';
     } else if (producto['precio'] != null) {
       precioInfo = 'Precio: \$${producto['precio']}';
     }

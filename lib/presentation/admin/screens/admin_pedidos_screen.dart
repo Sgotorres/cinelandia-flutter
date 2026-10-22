@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/di/injection.dart' as di;
 import '../../../core/utils/sound_service.dart';
-import '../../../providers/mesas_provider.dart';
-import '../../../providers/pedidos_provider.dart';
+import '../../shared/providers/mesas_provider.dart';
+import '../../mesero/providers/pedidos_provider.dart';
 import '../widgets/pedido_cocina_card.dart';
 
 class AdminPedidosScreen extends StatefulWidget {
@@ -22,13 +22,15 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
   @override
   void initState() {
     super.initState();
-    _pedidosStream = context.read<PedidosProvider>().obtenerPedidosActivosStream();
+    _pedidosStream =
+        context.read<PedidosProvider>().obtenerPedidosActivosStream();
   }
 
   void _verificarNuevosPedidos(List<Map<String, dynamic>> pedidosActivos) {
     if (_esCargaInicial) {
       for (final p in pedidosActivos) {
-        _estadosConocidos[p['id'] as int] = p['estado']?.toString().toLowerCase() ?? 'pendiente';
+        _estadosConocidos[p['id'] as int] =
+            p['estado']?.toString().toLowerCase() ?? 'pendiente';
       }
       _esCargaInicial = false;
       return;
@@ -60,7 +62,9 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _pedidosStream,
         builder: (context, snapshot) {
-          if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -99,7 +103,10 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
                         : 'Mesa Eliminada';
                     return SizedBox(
                       width: cardWidth,
-                      child: PedidoCocinaCard(pedido: pedido, nombreMesa: nombreMesa),
+                      child: PedidoCocinaCard(
+                        pedido: pedido,
+                        nombreMesa: nombreMesa,
+                      ),
                     );
                   }).toList(),
                 );

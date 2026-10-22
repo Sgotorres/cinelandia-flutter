@@ -1,9 +1,9 @@
 // lib/presentation/mesero/widgets/vista_mesas.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/mesas_provider.dart';
-import '../../../providers/pedidos_provider.dart';
-import '../../../data/models/mesa_model.dart';
+import '../../shared/providers/mesas_provider.dart';
+import '../providers/pedidos_provider.dart';
+import '../../../domain/entities/mesa.dart';
 import 'leyenda_mesas.dart';
 import 'mesas_grid.dart';
 import 'detector_pizza_lista.dart';
@@ -17,24 +17,24 @@ class VistaMesas extends StatefulWidget {
 }
 
 class _VistaMesasState extends State<VistaMesas> {
-  late final Stream<List<MesaModel>> _mesasStream;
+  late final Stream<List<Mesa>> _mesasStream;
   late final Stream<List<Map<String, dynamic>>> _pedidosStream;
-  
-  // Instanciamos nuestro detector modular
+
   final DetectorPizzaLista _detectorPizzaLista = DetectorPizzaLista();
 
   @override
   void initState() {
     super.initState();
     _mesasStream = context.read<MesasProvider>().mesasStream;
-    _pedidosStream = context.read<PedidosProvider>().obtenerPedidosActivosStream();
+    _pedidosStream =
+        context.read<PedidosProvider>().obtenerPedidosActivosStream();
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: StreamBuilder<List<MesaModel>>(
+      child: StreamBuilder<List<Mesa>>(
         stream: _mesasStream,
         builder: (context, mesasSnap) {
           if (mesasSnap.connectionState == ConnectionState.waiting) {
@@ -58,20 +58,17 @@ class _VistaMesasState extends State<VistaMesas> {
                 return e != 'pagado' && e != 'cancelada';
               }).toList();
 
-              // 1. Vigilamos si alguna pizza pasó a 'lista' para sonar la campanita
               _detectorPizzaLista.verificar(
                 context,
                 pedidosActivos: pedidosActivos,
                 mesasActivas: mesasActivas,
               );
 
-              // 2. Calculamos los contadores y el mapa de pedidos en una sola línea
               final resumen = ResumenEstadoMesas.calcular(
                 mesasActivas: mesasActivas,
                 pedidosActivos: pedidosActivos,
               );
 
-              // 3. Renderizamos los widgets limpios
               return Column(
                 children: [
                   LeyendaMesas(

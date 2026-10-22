@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../widgets/comanda_card.dart'; // <-- 1. Importamos nuestro nuevo widget
-import '../../../providers/mesas_provider.dart';
-import '../../../providers/pedidos_provider.dart'; // <-- 2. Importamos el provider de pedidos
+import '../widgets/comanda_card.dart';
+import '../../shared/providers/mesas_provider.dart';
+import '../providers/pedidos_provider.dart';
 
 class ComandasScreen extends StatefulWidget {
   const ComandasScreen({super.key});
@@ -19,8 +19,8 @@ class _ComandasScreenState extends State<ComandasScreen> {
   @override
   void initState() {
     super.initState();
-    // 3. ¡Adiós a Supabase en la UI! Obtenemos el stream a través de nuestro Provider
-    _pedidosStream = context.read<PedidosProvider>().obtenerTodosLosPedidosStream();
+    _pedidosStream =
+        context.read<PedidosProvider>().obtenerTodosLosPedidosStream();
   }
 
   @override
@@ -54,7 +54,6 @@ class _ComandasScreenState extends State<ComandasScreen> {
             );
           }
 
-          // Lógica de filtrado en memoria
           final todosLosPedidos = snapshot.data ?? [];
           final pedidosActivos = todosLosPedidos.where((p) {
             final estado = p['estado']?.toString().toLowerCase();
@@ -84,7 +83,6 @@ class _ComandasScreenState extends State<ComandasScreen> {
                   ? (mesasCache[mesaId] ?? 'Mesa $mesaId')
                   : 'Mesa Eliminada';
 
-              // 4. Instanciamos nuestro widget visual, pasando solo los datos que necesita
               return ComandaCard(
                 pedidoId: pedidoId,
                 mesaId: mesaId,

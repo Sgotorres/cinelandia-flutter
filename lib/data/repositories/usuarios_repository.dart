@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../domain/entities/usuario.dart';
 import '../models/usuario_model.dart';
 import '../../core/errors/failures.dart';
 import '../../core/utils/result.dart';
@@ -10,12 +11,15 @@ class UsuariosRepository {
   UsuariosRepository({required SupabaseClient supabaseClient})
     : _supabase = supabaseClient;
 
-  Stream<List<UsuarioModel>> obtenerUsuariosStream() {
+  Stream<List<Usuario>> obtenerUsuariosStream() {
     return _supabase
         .from('usuarios')
         .stream(primaryKey: ['id'])
         .order('nombre')
-        .map((datos) => datos.map((u) => UsuarioModel.fromJson(u)).toList());
+        .map(
+          (datos) =>
+              datos.map((u) => UsuarioModel.fromJson(u).toEntity()).toList(),
+        );
   }
 
   Future<Result<bool, Failure>> eliminarUsuario(int id) async {

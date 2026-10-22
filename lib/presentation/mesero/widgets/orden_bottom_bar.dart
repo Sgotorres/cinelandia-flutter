@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/routes/app_routes.dart';
-import '../../../providers/pedidos_provider.dart';
+import '../providers/pedidos_provider.dart';
 
 class OrdenBottomBar extends StatelessWidget {
   const OrdenBottomBar({super.key});
@@ -14,7 +14,6 @@ class OrdenBottomBar extends StatelessWidget {
     final carrito = pedidosProvider.carrito;
     final total = pedidosProvider.totalPedido;
 
-    // Si no hay nada en el carrito, ocultamos la barra
     if (carrito.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -22,7 +21,11 @@ class OrdenBottomBar extends StatelessWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, -5),
+          ),
         ],
       ),
       child: SafeArea(
@@ -33,23 +36,37 @@ class OrdenBottomBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${carrito.length} ítems', style: const TextStyle(color: Colors.grey)),
+                Text(
+                  '${carrito.length} ítems',
+                  style: const TextStyle(color: Colors.grey),
+                ),
                 Text(
                   '\$${total.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () {
                 context.push(AppRoutes.resumenPedido);
               },
-              child: const Text('Ver Resumen', style: TextStyle(fontSize: 16, color: Colors.white)),
+              child: const Text(
+                'Ver Resumen',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
             ),
           ],
         ),

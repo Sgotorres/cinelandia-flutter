@@ -1,3 +1,5 @@
+import '../../domain/entities/mesa.dart';
+
 class MesaModel {
   final int id;
   final String nombre;
@@ -27,5 +29,23 @@ class MesaModel {
       'activa': activa,
       'orden': orden,
     };
+  }
+
+  Mesa toEntity() {
+    return Mesa(
+      id: id,
+      nombre: nombre,
+      activa: activa,
+      orden: orden,
+    );
+  }
+
+  factory MesaModel.fromEntity(Mesa entity) {
+    return MesaModel(
+      id: entity.id,
+      nombre: entity.nombre,
+      activa: entity.activa,
+      orden: entity.orden,
+    );
   }
 }

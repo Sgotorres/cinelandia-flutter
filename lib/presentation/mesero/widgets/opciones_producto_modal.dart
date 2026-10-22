@@ -1,13 +1,13 @@
 // lib/presentation/mesero/widgets/opciones_producto_modal.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../data/models/producto_model.dart';
-import '../../../providers/pedidos_provider.dart';
+import '../../../domain/entities/producto.dart';
+import '../providers/pedidos_provider.dart';
 import 'selector_talla_cantidad.dart';
 
 class OpcionesProductoModal extends StatefulWidget {
-  final ProductoModel producto;
-  final ProductoModel? producto2;
+  final Producto producto;
+  final Producto? producto2;
 
   const OpcionesProductoModal({
     super.key,
@@ -57,13 +57,17 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
             children: [
               Text(
                 tituloProducto,
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               SelectorTallaCantidad(
                 esPizza: esPizza,
                 tallaSeleccionada: tallaSeleccionada,
-                onTallaChanged: (val) => setState(() => tallaSeleccionada = val),
+                onTallaChanged: (val) =>
+                    setState(() => tallaSeleccionada = val),
                 cantidad: cantidad,
                 onDecrementar: () {
                   if (cantidad > 1) setState(() => cantidad--);
@@ -75,8 +79,11 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
                 controller: _notaCtrl,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
-                  labelText: 'Nota especial (Ej. Adicional de tocineta en mitad)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  labelText:
+                      'Nota especial (Ej. Adicional de tocineta en mitad)',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   prefixIcon: const Icon(Icons.note_alt_outlined),
                 ),
                 maxLines: 2,
@@ -84,11 +91,15 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
               const SizedBox(height: 12),
               TextField(
                 controller: _precioExtraCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Monto a incrementar (\$)',
                   hintText: '0.00',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   prefixIcon: const Icon(Icons.attach_money),
                 ),
               ),
@@ -101,7 +112,8 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
                     backgroundColor: Colors.redAccent,
                   ),
                   onPressed: () {
-                    final double rawExtra = double.tryParse(
+                    final double rawExtra =
+                        double.tryParse(
                           _precioExtraCtrl.text.trim().replaceAll(',', '.'),
                         ) ??
                         0.0;

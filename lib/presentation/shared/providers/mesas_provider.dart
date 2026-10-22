@@ -1,10 +1,11 @@
+// lib/presentation/shared/providers/mesas_provider.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../data/models/mesa_model.dart';
-import '../data/repositories/mesas_repository.dart';
-import '../core/utils/result.dart';
+import '../../../domain/entities/mesa.dart';
+import '../../../data/repositories/mesas_repository.dart';
+import '../../../core/utils/result.dart';
 
 class MesasProvider extends ChangeNotifier {
   final MesasRepository _mesasRepository;
@@ -12,7 +13,7 @@ class MesasProvider extends ChangeNotifier {
   // Variables de estado
   Map<int, String> _mesasCache = {};
   bool _isLoading = false;
-  StreamSubscription<List<MesaModel>>? _mesasSubscription;
+  StreamSubscription<List<Mesa>>? _mesasSubscription;
 
   MesasProvider({required MesasRepository mesasRepository})
     : _mesasRepository = mesasRepository;
@@ -20,8 +21,8 @@ class MesasProvider extends ChangeNotifier {
   Map<int, String> get mesasCache => _mesasCache;
   bool get isLoading => _isLoading;
 
-  // Exponemos el stream limpio para la UI del administrador
-  Stream<List<MesaModel>> get mesasStream =>
+  // Exponemos el stream limpio de entidades puras para la UI
+  Stream<List<Mesa>> get mesasStream =>
       _mesasRepository.obtenerMesasStream();
 
   void cargarMesas() {

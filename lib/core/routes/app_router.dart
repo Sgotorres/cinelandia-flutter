@@ -4,11 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../presentation/admin/screens/admin_dashboard_screen.dart';
 import '../../presentation/auth/login_screen.dart';
+import '../../presentation/auth/providers/auth_provider.dart';
+import '../../presentation/mesero/providers/pedidos_provider.dart';
 import '../../presentation/mesero/screens/mesero_home_screen.dart';
 import '../../presentation/mesero/screens/resumen_pedido_screen.dart';
 import '../../presentation/mesero/screens/tomar_pedido_screen.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/pedidos_provider.dart';
 import 'app_routes.dart';
 
 class AppRouter {

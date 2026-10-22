@@ -1,8 +1,8 @@
 // lib/presentation/admin/widgets/admin_mesas_tab.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../data/models/mesa_model.dart';
-import '../../../providers/mesas_provider.dart';
+import '../../../domain/entities/mesa.dart';
+import '../../shared/providers/mesas_provider.dart';
 import 'formulario_mesa_dialog.dart';
 import 'mesa_list_tile.dart';
 
@@ -71,7 +71,7 @@ class AdminMesasTab extends StatelessWidget {
               ),
             ),
           Expanded(
-            child: StreamBuilder<List<MesaModel>>(
+            child: StreamBuilder<List<Mesa>>(
               stream: mesasProvider.mesasStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {

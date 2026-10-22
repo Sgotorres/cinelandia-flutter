@@ -2,6 +2,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/errors/failures.dart';
 import '../../core/utils/result.dart';
+import '../../domain/entities/producto.dart';
 import '../models/producto_model.dart';
 
 class MenuRepository {
@@ -10,14 +11,15 @@ class MenuRepository {
   MenuRepository({SupabaseClient? supabaseClient})
     : _supabase = supabaseClient ?? Supabase.instance.client;
 
-  Stream<List<ProductoModel>> obtenerMenuStream() {
+  Stream<List<Producto>> obtenerMenuStream() {
     return _supabase
         .from('productos')
         .stream(primaryKey: ['id'])
         .order('categoria', ascending: true)
         .map(
-          (listaDatos) =>
-              listaDatos.map((item) => ProductoModel.fromJson(item)).toList(),
+          (listaDatos) => listaDatos
+              .map((item) => ProductoModel.fromJson(item).toEntity())
+              .toList(),
         );
   }
 

@@ -1,7 +1,8 @@
+// lib/presentation/mesero/widgets/boton_avanzar_estado.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../providers/pedidos_provider.dart';
+import '../providers/pedidos_provider.dart';
 
 class BotonAvanzarEstado extends StatelessWidget {
   final int pedidoId;

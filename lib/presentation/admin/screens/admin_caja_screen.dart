@@ -1,12 +1,12 @@
 // lib/presentation/admin/screens/admin_caja_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:provider/provider.dart'; // <-- Nueva importación
+import 'package:provider/provider.dart';
 
 import '../widgets/panel_metricas_caja.dart';
 import '../widgets/header_historial_caja.dart';
 import '../widgets/ticket_venta_card.dart';
-import '../../../providers/mesas_provider.dart'; // <-- Importación del nuevo provider
+import '../../shared/providers/mesas_provider.dart';
 
 class AdminCajaScreen extends StatefulWidget {
   const AdminCajaScreen({super.key});
@@ -22,7 +22,6 @@ class _AdminCajaScreenState extends State<AdminCajaScreen> {
   void initState() {
     super.initState();
 
-    // Solo inicializamos el stream, ya no descargamos las mesas aquí
     _ventasStream = Supabase.instance.client
         .from('pedidos')
         .stream(primaryKey: ['id'])
@@ -32,7 +31,6 @@ class _AdminCajaScreenState extends State<AdminCajaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Escuchamos el provider para obtener la caché de mesas de forma global
     final mesasCache = context.watch<MesasProvider>().mesasCache;
 
     return Scaffold(
@@ -73,11 +71,7 @@ class _AdminCajaScreenState extends State<AdminCajaScreen> {
                         itemCount: ventas.length,
                         itemBuilder: (context, index) {
                           final venta = ventas[index];
-
-                          // 1. Nulo permitido
                           final mesaId = venta['mesa_id'] as int?;
-
-                          // 2. Validamos
                           final nombreMesa = mesaId != null
                               ? (mesasCache[mesaId] ?? 'Mesa $mesaId')
                               : 'Mesa Eliminada';

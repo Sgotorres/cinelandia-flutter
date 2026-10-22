@@ -1,6 +1,7 @@
+// lib/presentation/mesero/widgets/mitad_y_mitad_banner.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/pedidos_provider.dart';
+import '../providers/pedidos_provider.dart';
 
 class MitadYMitadBanner extends StatelessWidget {
   const MitadYMitadBanner({super.key});
@@ -15,10 +16,14 @@ class MitadYMitadBanner extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(16.0),
         decoration: BoxDecoration(
-          color: pedidosProvider.modoMitadYMitad ? Colors.orange.shade50 : Colors.white,
+          color: pedidosProvider.modoMitadYMitad
+              ? Colors.orange.shade50
+              : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: pedidosProvider.modoMitadYMitad ? Colors.orange.shade300 : Colors.grey.shade200,
+            color: pedidosProvider.modoMitadYMitad
+                ? Colors.orange.shade300
+                : Colors.grey.shade200,
             width: 1.5,
           ),
           boxShadow: [
@@ -33,7 +38,7 @@ class MitadYMitadBanner extends StatelessWidget {
                 color: Colors.black.withOpacity(0.02),
                 blurRadius: 5,
                 offset: const Offset(0, 2),
-              )
+              ),
           ],
         ),
         child: Row(
@@ -41,12 +46,16 @@ class MitadYMitadBanner extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: pedidosProvider.modoMitadYMitad ? Colors.orange.shade100 : Colors.grey.shade100,
+                color: pedidosProvider.modoMitadYMitad
+                    ? Colors.orange.shade100
+                    : Colors.grey.shade100,
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.pie_chart_outline,
-                color: pedidosProvider.modoMitadYMitad ? Colors.orange.shade700 : Colors.grey.shade500,
+                color: pedidosProvider.modoMitadYMitad
+                    ? Colors.orange.shade700
+                    : Colors.grey.shade500,
                 size: 24,
               ),
             ),
@@ -60,23 +69,29 @@ class MitadYMitadBanner extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: pedidosProvider.modoMitadYMitad ? Colors.orange.shade900 : Colors.black87,
+                      color: pedidosProvider.modoMitadYMitad
+                          ? Colors.orange.shade900
+                          : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     pedidosProvider.modoMitadYMitad
                         ? (pedidosProvider.primeraMitad == null
-                            ? 'Toca la 1ra mitad...'
-                            : '1/2 ${pedidosProvider.primeraMitad!.nombre}. Toca la 2da...')
+                              ? 'Toca la 1ra mitad...'
+                              : '1/2 ${pedidosProvider.primeraMitad!.nombre}. Toca la 2da...')
                         : 'Combina dos pizzas en una',
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: pedidosProvider.modoMitadYMitad && pedidosProvider.primeraMitad != null
+                      fontWeight:
+                          pedidosProvider.modoMitadYMitad &&
+                              pedidosProvider.primeraMitad != null
                           ? FontWeight.bold
                           : FontWeight.normal,
                       color: pedidosProvider.modoMitadYMitad
-                          ? (pedidosProvider.primeraMitad == null ? Colors.orange.shade700 : Colors.indigo)
+                          ? (pedidosProvider.primeraMitad == null
+                                ? Colors.orange.shade700
+                                : Colors.indigo)
                           : Colors.grey.shade500,
                     ),
                   ),

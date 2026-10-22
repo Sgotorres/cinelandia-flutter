@@ -1,6 +1,6 @@
 // lib/presentation/mesero/widgets/detector_pizza_lista.dart
 import 'package:flutter/material.dart';
-import '../../../data/models/mesa_model.dart';
+import '../../../domain/entities/mesa.dart';
 import '../../../core/di/injection.dart' as di;
 import '../../../core/utils/sound_service.dart';
 
@@ -12,13 +12,13 @@ class DetectorPizzaLista {
   void verificar(
     BuildContext context, {
     required List<Map<String, dynamic>> pedidosActivos,
-    required List<MesaModel> mesasActivas,
+    required List<Mesa> mesasActivas,
   }) {
-    // 1. Si acaba de abrir la pantalla, solo registramos cómo están las mesas sin sonar
     if (_esCargaInicial) {
       for (final p in pedidosActivos) {
         final id = p['id'] as int;
-        _estadosPrevios[id] = p['estado']?.toString().toLowerCase() ?? 'pendiente';
+        _estadosPrevios[id] =
+            p['estado']?.toString().toLowerCase() ?? 'pendiente';
       }
       _esCargaInicial = false;
       return;
@@ -26,7 +26,6 @@ class DetectorPizzaLista {
 
     String? mesaRecienLista;
 
-    // 2. Comparamos el estado anterior con el nuevo estado que llegó de Supabase
     for (final p in pedidosActivos) {
       final id = p['id'] as int;
       final estadoActual = p['estado']?.toString().toLowerCase() ?? 'pendiente';
@@ -45,11 +44,9 @@ class DetectorPizzaLista {
       _estadosPrevios[id] = estadoActual;
     }
 
-    // 3. Limpiamos de la memoria los pedidos que ya fueron cobrados o cancelados
     final idsActivos = pedidosActivos.map((p) => p['id'] as int).toSet();
     _estadosPrevios.removeWhere((id, _) => !idsActivos.contains(id));
 
-    // 4. Si una pizza acaba de salir del horno a 'lista', disparamos la alerta
     if (mesaRecienLista != null) {
       di.sl<SoundService>().tocarCampanita();
 
