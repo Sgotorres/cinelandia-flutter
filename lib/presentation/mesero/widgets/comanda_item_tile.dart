@@ -6,6 +6,8 @@ class ComandaItemTile extends StatelessWidget {
   final int cantidad;
   final String talla;
   final double subtotal;
+  final String? nota;
+  final double precioExtra;
   final VoidCallback onEliminar;
   final bool isDeleting;
 
@@ -15,6 +17,8 @@ class ComandaItemTile extends StatelessWidget {
     required this.cantidad,
     required this.talla,
     required this.subtotal,
+    this.nota,
+    this.precioExtra = 0.0,
     required this.onEliminar,
     required this.isDeleting,
   });
@@ -59,9 +63,39 @@ class ComandaItemTile extends StatelessWidget {
           nombre,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
         ),
-        subtitle: Text(
-          talla != 'Única' && talla != 'null' ? 'Tamaño: $talla' : 'Unidad',
-          style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              talla != 'Única' && talla != 'null' ? 'Tamaño: $talla' : 'Unidad',
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            ),
+            if (nota != null && nota!.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  'Nota: $nota',
+                  style: TextStyle(
+                    color: Colors.orange.shade800,
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            if (precioExtra > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: Text(
+                  'Adicional: +\$${precioExtra.toStringAsFixed(2)} c/u',
+                  style: TextStyle(
+                    color: Colors.green.shade700,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,

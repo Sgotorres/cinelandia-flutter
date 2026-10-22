@@ -59,13 +59,22 @@ class PedidosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void agregarAlCarrito({required ProductoModel producto1, ProductoModel? producto2, required int cantidad, required String talla}) {
+  void agregarAlCarrito({
+    required ProductoModel producto1,
+    ProductoModel? producto2,
+    required int cantidad,
+    required String talla,
+    String? nota,
+    double precioExtra = 0.0,
+  }) {
     _carrito = _gestionarCarritoUseCase.agregarItem(
       carritoActual: _carrito,
       producto1: producto1,
       producto2: producto2,
       cantidad: cantidad,
       talla: talla,
+      nota: nota,
+      precioExtra: precioExtra,
     );
     notifyListeners();
   }

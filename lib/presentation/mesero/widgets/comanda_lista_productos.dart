@@ -89,12 +89,18 @@ class _ComandaListaProductosState extends State<ComandaListaProductos> {
               }
 
               final nombreAMostrar = nombreP2 != null ? '1/2 $nombreP1 y 1/2 $nombreP2' : nombreP1;
+              final String? nota = item['nota'];
+              final double precioExtra = item['precio_extra'] != null
+                  ? (item['precio_extra'] as num).toDouble()
+                  : 0.0;
 
               return ComandaItemTile(
                 nombre: nombreAMostrar,
                 cantidad: cantidad,
                 talla: talla,
                 subtotal: subtotal,
+                nota: nota,
+                precioExtra: precioExtra,
                 isDeleting: _isDeleting,
                 onEliminar: () => _eliminarProducto(item['id'], detalles.length),
               );

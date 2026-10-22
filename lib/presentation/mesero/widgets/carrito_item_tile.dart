@@ -71,14 +71,44 @@ class CarritoItemTile extends StatelessWidget {
           nombreAMostrar,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
-        // Tamaño / Unidad
+        // Tamaño / Unidad y Nota
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4.0),
-          child: Text(
-            item.talla != null && item.talla != 'Única' && item.talla != 'null'
-                ? 'Tamaño: ${item.talla}'
-                : 'Unidad',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.talla != null && item.talla != 'Única' && item.talla != 'null'
+                    ? 'Tamaño: ${item.talla}'
+                    : 'Unidad',
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+              ),
+              if (item.nota != null && item.nota!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: Text(
+                    'Nota: ${item.nota}',
+                    style: TextStyle(
+                      color: Colors.orange.shade800,
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              if (item.precioExtra > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2.0),
+                  child: Text(
+                    'Adicional: +\$${item.precioExtra.toStringAsFixed(2)} c/u',
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         // Precio + Botón circular con icono de eliminar

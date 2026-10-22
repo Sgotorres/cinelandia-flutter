@@ -6,6 +6,8 @@ class PedidoDetalleModel {
   final double precioUnitario;
   final String? talla;
   final int? producto2Id;
+  final String? nota;
+  final double precioExtra;
 
   PedidoDetalleModel({
     this.id,
@@ -15,6 +17,8 @@ class PedidoDetalleModel {
     required this.precioUnitario,
     this.talla,
     this.producto2Id,
+    this.nota,
+    this.precioExtra = 0.0,
   });
 
   // Ideal para cuando necesites leer los pedidos desde Supabase
@@ -27,6 +31,10 @@ class PedidoDetalleModel {
       precioUnitario: (json['precio_unitario'] as num).toDouble(),
       talla: json['talla'],
       producto2Id: json['producto_2_id'],
+      nota: json['nota'],
+      precioExtra: json['precio_extra'] != null
+          ? (json['precio_extra'] as num).toDouble()
+          : 0.0,
     );
   }
 
@@ -38,6 +46,8 @@ class PedidoDetalleModel {
       'cantidad': cantidad,
       'precio_unitario': precioUnitario,
       if (talla != null) 'talla': talla,
+      if (nota != null && nota!.isNotEmpty) 'nota': nota,
+      if (precioExtra > 0) 'precio_extra': precioExtra,
     };
   }
 }

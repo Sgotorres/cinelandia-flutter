@@ -25,6 +25,10 @@ class ArticuloPedidoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final int cantidad = item['cantidad'] ?? 1;
     final String talla = item['talla'] ?? 'Única';
+    final String? nota = item['nota'];
+    final double precioExtra = item['precio_extra'] != null
+        ? (item['precio_extra'] as num).toDouble()
+        : 0.0;
     final nombreP1 = _buscarNombre(item['producto_id'] as int?);
     final p2Id = item['producto_2_id'] as int?;
     final nombreP2 = p2Id != null ? _buscarNombre(p2Id) : null;
@@ -72,6 +76,39 @@ class ArticuloPedidoRow extends StatelessWidget {
                       color: Colors.grey.shade600,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                if (nota != null && nota.toString().trim().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Text(
+                        'Nota: $nota',
+                        style: TextStyle(
+                          color: Colors.orange.shade900,
+                          fontSize: 13,
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                if (precioExtra > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2.0),
+                    child: Text(
+                      'Extra: +\$${precioExtra.toStringAsFixed(2)} c/u',
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
               ],

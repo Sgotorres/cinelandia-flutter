@@ -30,7 +30,11 @@ class _ListaArticulosPedidoState extends State<ListaArticulosPedido> {
       final p1 = item['producto_id'];
       final p2 = item['producto_2_id'] ?? 'null';
       final talla = item['talla'] ?? 'Única';
-      final key = '${p1}_${p2}_$talla';
+      final nota = (item['nota'] ?? '').toString().trim().toLowerCase();
+      final precioExtra = item['precio_extra'] != null
+          ? (item['precio_extra'] as num).toDouble()
+          : 0.0;
+      final key = '${p1}_${p2}_${talla}_${nota}_$precioExtra';
 
       if (agrupados.containsKey(key)) {
         agrupados[key]!['cantidad'] =

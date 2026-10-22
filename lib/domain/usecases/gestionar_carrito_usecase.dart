@@ -15,6 +15,8 @@ class GestionarCarritoUseCase {
     ProductoModel? producto2,
     required int cantidad,
     required String talla,
+    String? nota,
+    double precioExtra = 0.0,
   }) {
     // 1. Mapear producto1 a la entidad
     final entidadP1 = Producto(
@@ -43,20 +45,24 @@ class GestionarCarritoUseCase {
       );
     }
 
-    // 3. Calcular precio unitario con la regla de negocio
+    // 3. Calcular precio unitario con la regla de negocio + precio extra
     final precioUnitario = _calcularPrecioUseCase.execute(
       producto1: entidadP1,
       producto2: entidadP2,
       talla: talla,
-    );
+    ) + precioExtra;
 
     final List<PedidoDetalleModel> nuevoCarrito = List.from(carritoActual);
 
-    // 4. Buscar si el producto ya existe en el carrito
+    final String? notaNormalizada = (nota != null && nota.trim().isNotEmpty) ? nota.trim() : null;
+
+    // 4. Buscar si el producto ya existe en el carrito (solo agrupa si nota y precioExtra coinciden)
     final indexExistente = nuevoCarrito.indexWhere((item) => 
       item.productoId == producto1.id && 
       item.producto2Id == producto2?.id && 
-      item.talla == talla
+      item.talla == talla &&
+      (item.nota?.trim().toLowerCase() ?? '') == (notaNormalizada?.toLowerCase() ?? '') &&
+      item.precioExtra == precioExtra
     );
 
     if (indexExistente != -1) {
@@ -70,6 +76,8 @@ class GestionarCarritoUseCase {
         cantidad: itemPrevio.cantidad + cantidad,
         precioUnitario: itemPrevio.precioUnitario,
         talla: itemPrevio.talla,
+        nota: itemPrevio.nota,
+        precioExtra: itemPrevio.precioExtra,
       );
     } else {
       // Si es un producto nuevo en esta orden, lo añadimos normalmente
@@ -79,6 +87,8 @@ class GestionarCarritoUseCase {
         cantidad: cantidad,
         precioUnitario: precioUnitario,
         talla: talla,
+        nota: notaNormalizada,
+        precioExtra: precioExtra,
       ));
     }
 
