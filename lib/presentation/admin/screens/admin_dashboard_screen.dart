@@ -1,17 +1,15 @@
 // lib/presentation/admin/screens/admin_dashboard_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../providers/auth_provider.dart';
+import '../../shared/widgets/campanita_widget.dart'; // <-- 1. IMPORT AGREGADO
 
-// IMPORTACIONES DE TUS PANTALLAS (Aquí faltaba el admin_menu_screen)
 import 'admin_pedidos_screen.dart';
 import 'admin_caja_screen.dart';
 import 'admin_menu_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
-
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
@@ -29,6 +27,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
         backgroundColor: Colors.indigo,
         actions: [
+          // 2. COLOCADO EN EL APPBAR JUNTO AL BOTÓN DE SALIR
+          const CampanitaWidget(iconColor: Colors.white),
           IconButton(
             icon: const Icon(Icons.logout, color: Colors.white),
             tooltip: 'Cerrar sesión',
@@ -40,8 +40,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         index: _selectedIndex,
         children: const [
           AdminPedidosScreen(), // Índice 0: Cocina
-          AdminCajaScreen(), // Índice 1: Caja
-          AdminMenuScreen(), // Índice 2: Gestión
+          AdminCajaScreen(),    // Índice 1: Caja
+          AdminMenuScreen(),    // Índice 2: Gestión
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

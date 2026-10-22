@@ -2,100 +2,94 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
-// Importaciones de las pantallas de Auth
-import '../../presentation/auth/login_screen.dart';
-
-// Importaciones de las pantallas del Mesero
-import '../../presentation/mesero/screens/mesero_home_screen.dart';
-import '../../presentation/mesero/screens/tomar_pedido_screen.dart';
-import '../../presentation/mesero/screens/resumen_pedido_screen.dart';
-
-// Importaciones de las pantallas del Admin
 import '../../presentation/admin/screens/admin_dashboard_screen.dart';
-
-// Importación del AuthProvider
+import '../../presentation/auth/login_screen.dart';
+import '../../presentation/mesero/screens/mesero_home_screen.dart';
+import '../../presentation/mesero/screens/resumen_pedido_screen.dart';
+import '../../presentation/mesero/screens/tomar_pedido_screen.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/pedidos_provider.dart';
+import 'app_routes.dart';
 
 class AppRouter {
   static GoRouter router(BuildContext context) {
-    // Escuchamos el AuthProvider para reaccionar a cambios (ej. login, logout, expiración)
     final authProvider = context.read<AuthProvider>();
 
     return GoRouter(
-      initialLocation: '/login',
-      
-      // refreshListenable actúa como middleware: cada vez que el authProvider 
-      // notifica un cambio, se reevalúa la lógica de redirección.
+      initialLocation: AppRoutes.login,
       refreshListenable: authProvider,
-      
-      // Lógica de Redirección y Protección de Rutas
       redirect: (context, state) {
-        final isLoggedIn = authProvider.isLoggedIn; 
-        final isRoleLoaded = authProvider.isRoleLoaded; // <-- Leemos nuestra nueva bandera
-        final role = authProvider.userRole; 
-        final isLoggingIn = state.matchedLocation == '/login';
+        final isLoggedIn = authProvider.isLoggedIn;
+        final isRoleLoaded = authProvider.isRoleLoaded;
+        final role = authProvider.userRole;
+        final location = state.matchedLocation;
+        final isLoggingIn = location == AppRoutes.login;
 
-        // 1. Si no está autenticado y NO está en la pantalla de login -> enviarlo al login
-        if (!isLoggedIn && !isLoggingIn) {
-          return '/login';
-        }
-
-        // 2. NUEVO: Si está autenticado pero aún no se ha descargado el rol, no redirigir aún.
-        // Esto mantiene al usuario en la pantalla de login viendo el "spinner" circular 
-        // hasta que tengamos claro qué permisos tiene.
-        if (isLoggedIn && !isRoleLoaded) {
-          return null; 
-        }
-
-        // 3. Si está autenticado, ya cargó el rol y trata de ir al login -> redirigirlo a su respectivo home
+        if (!isLoggedIn && !isLoggingIn) return AppRoutes.login;
+        if (isLoggedIn && !isRoleLoaded) return null;
         if (isLoggedIn && isLoggingIn) {
-          if (role == 'admin') {
-            return '/admin';
-          }
-          return '/mesero';
+          return role == 'admin' ? AppRoutes.admin : AppRoutes.mesero;
+        }
+        if (location.startsWith(AppRoutes.admin) && role != 'admin') {
+          return AppRoutes.mesero;
+        }
+        if (location.startsWith(AppRoutes.mesero) && role == 'admin') {
+          return AppRoutes.admin;
         }
 
-        // 4. Protección de rutas por rol: Evitar que un mesero entre a las rutas de admin
-        final isGoingToAdmin = state.matchedLocation.startsWith('/admin');
-        if (isGoingToAdmin && role != 'admin') {
-          return '/mesero';
+        if (location == AppRoutes.tomarPedido ||
+            location == AppRoutes.resumenPedido) {
+          final mesaId = context.read<PedidosProvider>().mesaIdSeleccionada;
+          if (mesaId == null) return AppRoutes.mesero;
         }
-
-        // Si pasa todas las validaciones, permitimos que siga su camino
-        return null; 
+        return null;
       },
-      
-      // Árbol de Rutas de la Aplicación
       routes: [
         GoRoute(
-          path: '/login',
+          name: 'login',
+          path: AppRoutes.login,
           builder: (context, state) => const LoginScreen(),
         ),
-        
         GoRoute(
-          path: '/mesero',
+          name: 'mesero',
+          path: AppRoutes.mesero,
           builder: (context, state) => const MeseroHomeScreen(),
-          routes: [ 
-            // SUB-RUTAS DEL MESERO
-            // La ruta completa será: /mesero/tomar-pedido
+          routes: [
             GoRoute(
-              path: 'tomar-pedido', 
+              name: 'tomar-pedido',
+              path: 'tomar-pedido',
               builder: (context, state) => const TomarPedidoScreen(),
             ),
-            // La ruta completa será: /mesero/resumen-pedido
             GoRoute(
+              name: 'resumen-pedido',
               path: 'resumen-pedido',
               builder: (context, state) => const ResumenPedidoScreen(),
             ),
-          ]
+          ],
         ),
-        
         GoRoute(
-          path: '/admin',
+          name: 'admin',
+          path: AppRoutes.admin,
           builder: (context, state) => const AdminDashboardScreen(),
         ),
       ],
+      errorBuilder: (context, state) => Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.redAccent),
+              const SizedBox(height: 16),
+              Text('Ruta no encontrada: ${state.uri}'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => context.go(AppRoutes.login),
+                child: const Text('Volver al inicio'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -1,10 +1,11 @@
 // lib/presentation/admin/screens/admin_pedidos_screen.dart
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
-
-import '../widgets/pedido_cocina_card.dart';
+import '../../../core/di/injection.dart' as di;
+import '../../../core/utils/sound_service.dart';
 import '../../../providers/mesas_provider.dart';
+import '../../../providers/pedidos_provider.dart';
+import '../widgets/pedido_cocina_card.dart';
 
 class AdminPedidosScreen extends StatefulWidget {
   const AdminPedidosScreen({super.key});
@@ -15,14 +16,39 @@ class AdminPedidosScreen extends StatefulWidget {
 
 class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
   late final Stream<List<Map<String, dynamic>>> _pedidosStream;
+  final Map<int, String> _estadosConocidos = {};
+  bool _esCargaInicial = true;
 
   @override
   void initState() {
     super.initState();
-    _pedidosStream = Supabase.instance.client
-        .from('pedidos')
-        .stream(primaryKey: ['id'])
-        .order('fecha', ascending: true);
+    _pedidosStream = context.read<PedidosProvider>().obtenerPedidosActivosStream();
+  }
+
+  void _verificarNuevosPedidos(List<Map<String, dynamic>> pedidosActivos) {
+    if (_esCargaInicial) {
+      for (final p in pedidosActivos) {
+        _estadosConocidos[p['id'] as int] = p['estado']?.toString().toLowerCase() ?? 'pendiente';
+      }
+      _esCargaInicial = false;
+      return;
+    }
+
+    bool llegoPedidoNuevo = false;
+    final nuevosEstados = <int, String>{};
+    for (final p in pedidosActivos) {
+      final id = p['id'] as int;
+      final estado = p['estado']?.toString().toLowerCase() ?? 'pendiente';
+      if (estado == 'pendiente' && _estadosConocidos[id] != 'pendiente') {
+        llegoPedidoNuevo = true;
+      }
+      nuevosEstados[id] = estado;
+    }
+    _estadosConocidos
+      ..clear()
+      ..addAll(nuevosEstados);
+
+    if (llegoPedidoNuevo) di.sl<SoundService>().tocarCampanita();
   }
 
   @override
@@ -34,18 +60,17 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _pedidosStream,
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+          if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final todosLosPedidos = snapshot.data ?? [];
-          final pedidosActivos = todosLosPedidos.where((p) {
+          final pedidosActivos = (snapshot.data ?? []).where((p) {
             final estado = p['estado']?.toString().toLowerCase();
             return estado != 'pagado' && estado != 'cancelada';
           }).toList();
+
+          _verificarNuevosPedidos(pedidosActivos);
 
           if (pedidosActivos.isEmpty) {
             return const Center(
@@ -56,22 +81,13 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
             );
           }
 
-          // Usamos SingleChildScrollView y un Wrap para que las tarjetas crezcan
-          // orgánicamente según sus productos y se acomoden en la pantalla.
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                // Calculamos cuántas columnas caben según el ancho de la pantalla
-                double anchoPantalla = constraints.maxWidth;
-                int columnas = 1;
-                if (anchoPantalla >= 1200) {
-                  columnas = 3;
-                } else if (anchoPantalla >= 800) {
-                  columnas = 2;
-                }
-
-                double anchoTarjeta = (anchoPantalla - (16 * (columnas - 1))) / columnas;
+                final w = constraints.maxWidth;
+                final cols = w >= 1200 ? 3 : (w >= 800 ? 2 : 1);
+                final cardWidth = (w - (16 * (cols - 1))) / cols;
 
                 return Wrap(
                   spacing: 16,
@@ -81,9 +97,8 @@ class _AdminPedidosScreenState extends State<AdminPedidosScreen> {
                     final nombreMesa = mesaId != null
                         ? (mesasCache[mesaId] ?? 'Mesa $mesaId')
                         : 'Mesa Eliminada';
-
                     return SizedBox(
-                      width: anchoTarjeta,
+                      width: cardWidth,
                       child: PedidoCocinaCard(pedido: pedido, nombreMesa: nombreMesa),
                     );
                   }).toList(),

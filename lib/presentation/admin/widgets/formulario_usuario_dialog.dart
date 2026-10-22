@@ -1,13 +1,14 @@
 // lib/presentation/admin/widgets/formulario_usuario_dialog.dart
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FormularioUsuarioDialog extends StatefulWidget {
   const FormularioUsuarioDialog({super.key});
 
   @override
-  State<FormularioUsuarioDialog> createState() => _FormularioUsuarioDialogState();
+  State<FormularioUsuarioDialog> createState() =>
+      _FormularioUsuarioDialogState();
 }
 
 class _FormularioUsuarioDialogState extends State<FormularioUsuarioDialog> {
@@ -15,62 +16,63 @@ class _FormularioUsuarioDialogState extends State<FormularioUsuarioDialog> {
   final apellidoCtrl = TextEditingController();
   final correoCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
-  
   bool _isLoading = false;
 
   @override
   void dispose() {
-    nombreCtrl.dispose();
-    apellidoCtrl.dispose();
-    correoCtrl.dispose();
-    passwordCtrl.dispose();
+    for (final c in [nombreCtrl, apellidoCtrl, correoCtrl, passwordCtrl]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _guardarUsuario() async {
-    if (nombreCtrl.text.isEmpty || correoCtrl.text.isEmpty || passwordCtrl.text.length < 6) {
+    if (nombreCtrl.text.isEmpty ||
+        correoCtrl.text.isEmpty ||
+        passwordCtrl.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Llena todos los campos (Mínimo 6 caracteres en contraseña)')),
+        const SnackBar(
+          content: Text('Llena todos los campos (Mínimo 6 caracteres)'),
+        ),
       );
       return;
     }
 
     setState(() => _isLoading = true);
-
     try {
-      // 1. Instancia temporal para no cerrar la sesión del Administrador
       final tempClient = SupabaseClient(
         dotenv.env['SUPABASE_URL']!,
         dotenv.env['SUPABASE_ANON_KEY']!,
         authOptions: const AuthClientOptions(
-          authFlowType: AuthFlowType.implicit, // <--- Esta línea soluciona el error
+          authFlowType: AuthFlowType.implicit,
         ),
-      );;
+      );
 
-      // 2. Registrar en Supabase Auth
       await tempClient.auth.signUp(
         email: correoCtrl.text.trim(),
         password: passwordCtrl.text,
       );
 
-      // 3. Guardar el perfil en tu tabla 'usuarios' usando el cliente principal
       await Supabase.instance.client.from('usuarios').insert({
         'nombre': nombreCtrl.text.trim(),
         'apellido': apellidoCtrl.text.trim(),
         'correo': correoCtrl.text.trim(),
-        'rol': 'mesero', // Forzamos el rol para los nuevos usuarios
+        'rol': 'mesero',
       });
 
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuario creado exitosamente'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Usuario creado exitosamente'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error de Auth: ${e.message}'), backgroundColor: Colors.red),
+          SnackBar(content: Text('Error Auth: ${e.message}'), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
@@ -92,32 +94,15 @@ class _FormularioUsuarioDialogState extends State<FormularioUsuarioDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: nombreCtrl,
-              decoration: const InputDecoration(labelText: 'Nombre'),
-            ),
-            TextField(
-              controller: apellidoCtrl,
-              decoration: const InputDecoration(labelText: 'Apellido'),
-            ),
-            TextField(
-              controller: correoCtrl,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'Correo electrónico'),
-            ),
-            TextField(
-              controller: passwordCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Contraseña temporal (mín. 6 chars)'),
-            ),
+            TextField(controller: nombreCtrl, decoration: const InputDecoration(labelText: 'Nombre')),
+            TextField(controller: apellidoCtrl, decoration: const InputDecoration(labelText: 'Apellido')),
+            TextField(controller: correoCtrl, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Correo electrónico')),
+            TextField(controller: passwordCtrl, obscureText: true, decoration: const InputDecoration(labelText: 'Contraseña temporal (mín. 6 chars)')),
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
         ElevatedButton(
           onPressed: _isLoading ? null : _guardarUsuario,
           style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),

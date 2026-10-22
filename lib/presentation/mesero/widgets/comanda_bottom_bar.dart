@@ -1,8 +1,9 @@
 // lib/presentation/mesero/widgets/comanda_bottom_bar.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../core/routes/app_routes.dart';
 import '../../../providers/pedidos_provider.dart';
-import '../screens/tomar_pedido_screen.dart';
 
 class ComandaBottomBar extends StatelessWidget {
   final int mesaId;
@@ -27,7 +28,7 @@ class ComandaBottomBar extends StatelessWidget {
             color: Colors.black.withOpacity(0.04),
             blurRadius: 20,
             offset: const Offset(0, -10),
-          )
+          ),
         ],
       ),
       child: SizedBox(
@@ -57,12 +58,7 @@ class ComandaBottomBar extends StatelessWidget {
                   pedidoId: pedidoId,
                 );
             Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const TomarPedidoScreen(),
-              ),
-            );
+            context.push(AppRoutes.tomarPedido);
           },
         ),
       ),

@@ -1,14 +1,13 @@
 // lib/presentation/mesero/widgets/opciones_producto_modal.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../../../data/models/producto_model.dart';
 import '../../../providers/pedidos_provider.dart';
+import 'selector_talla_cantidad.dart';
 
 class OpcionesProductoModal extends StatefulWidget {
   final ProductoModel producto;
-  final ProductoModel?
-  producto2; // NUEVO: Producto opcional para la segunda mitad
+  final ProductoModel? producto2;
 
   const OpcionesProductoModal({
     super.key,
@@ -26,12 +25,8 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
 
   @override
   Widget build(BuildContext context) {
-    // Si no tiene precios de tamaño, es una bebida o extra
     final bool esPizza = widget.producto.categoria.toLowerCase() == 'pizzas';
-    final bool esMitad =
-        widget.producto2 != null; // Verifica si es mitad y mitad
-
-    // Crea el string combinado si existen dos productos
+    final bool esMitad = widget.producto2 != null;
     final String tituloProducto = esMitad
         ? '1/2 ${widget.producto.nombre} y 1/2 ${widget.producto2!.nombre}'
         : widget.producto.nombre;
@@ -47,81 +42,20 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            tituloProducto, // Título dinámico (Ej: 1/2 Margarita y 1/2 Jamón)
+            tituloProducto,
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-
-          if (esPizza) ...[
-            const Text('Tamaño:', style: TextStyle(fontSize: 18)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Radio<String>(
-                      value: 'Mediana',
-                      groupValue: tallaSeleccionada,
-                      onChanged: (val) =>
-                          setState(() => tallaSeleccionada = val!),
-                    ),
-                    const Text('Mediana'),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Radio<String>(
-                      value: 'Grande',
-                      groupValue: tallaSeleccionada,
-                      onChanged: (val) =>
-                          setState(() => tallaSeleccionada = val!),
-                    ),
-                    const Text('Grande'),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Radio<String>(
-                      value: 'Familiar',
-                      groupValue: tallaSeleccionada,
-                      onChanged: (val) =>
-                          setState(() => tallaSeleccionada = val!),
-                    ),
-                    const Text('Familiar'),
-                  ],
-                ),
-              ],
-            ),
-          ],
-
-          const SizedBox(height: 16),
-          const Text('Cantidad:', style: TextStyle(fontSize: 18)),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline, size: 32),
-                onPressed: () {
-                  if (cantidad > 1) setState(() => cantidad--);
-                },
-              ),
-              Text(
-                '$cantidad',
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.add_circle_outline, size: 32),
-                onPressed: () => setState(() => cantidad++),
-              ),
-            ],
+          SelectorTallaCantidad(
+            esPizza: esPizza,
+            tallaSeleccionada: tallaSeleccionada,
+            onTallaChanged: (val) => setState(() => tallaSeleccionada = val),
+            cantidad: cantidad,
+            onDecrementar: () {
+              if (cantidad > 1) setState(() => cantidad--);
+            },
+            onIncrementar: () => setState(() => cantidad++),
           ),
-
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -131,17 +65,13 @@ class _OpcionesProductoModalState extends State<OpcionesProductoModal> {
                 backgroundColor: Colors.redAccent,
               ),
               onPressed: () {
-                // Agregar al carrito usando el Provider
                 context.read<PedidosProvider>().agregarAlCarrito(
                   producto1: widget.producto,
-                  producto2:
-                      widget.producto2, // Envía el segundo producto al Provider
+                  producto2: widget.producto2,
                   cantidad: cantidad,
                   talla: esPizza ? tallaSeleccionada : 'Única',
                 );
-
-                Navigator.pop(context); // Cierra el modal
-
+                Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('$tituloProducto agregado al pedido'),

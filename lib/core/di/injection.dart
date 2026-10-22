@@ -25,6 +25,7 @@ import '../../providers/mesas_provider.dart';
 import '../../providers/pedidos_provider.dart';
 import '../../providers/usuarios_provider.dart';
 import '../../providers/notificaciones_provider.dart';
+import '../utils/sound_service.dart';
 
 final sl = GetIt.instance; // sl = Service Locator
 
@@ -32,19 +33,21 @@ Future<void> init() async {
   // 1. Clientes Externos (registrado UNA sola vez)
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
 
-  // 2. DataSources
+  // 2. DataSources y Servicios
   sl.registerLazySingleton(() => RemotePedidosDataSource(supabaseClient: sl()));
   sl.registerLazySingleton(() => LocalPedidosDataSource());
+  sl.registerLazySingleton(() => SoundService());
 
   // 3. Repositorios
   sl.registerLazySingleton(() => MenuRepository(supabaseClient: sl()));
   sl.registerLazySingleton(() => MesasRepository(supabaseClient: sl()));
   sl.registerLazySingleton(() => UsuariosRepository(supabaseClient: sl()));
-  sl.registerLazySingleton(() => NotificacionesRepository(supabaseClient: sl()));
-  sl.registerLazySingleton(() => PedidosRepository(
-        remoteDataSource: sl(),
-        localDataSource: sl(),
-      ));
+  sl.registerLazySingleton(
+    () => NotificacionesRepository(supabaseClient: sl()),
+  );
+  sl.registerLazySingleton(
+    () => PedidosRepository(remoteDataSource: sl(), localDataSource: sl()),
+  );
 
   // 4. Casos de Uso
   sl.registerLazySingleton(() => CalcularPrecioItemUseCase());
@@ -57,5 +60,5 @@ Future<void> init() async {
   sl.registerFactory(() => MesasProvider(mesasRepository: sl()));
   sl.registerFactory(() => PedidosProvider(sl(), sl(), sl()));
   sl.registerFactory(() => UsuariosProvider(usuariosRepository: sl()));
-  sl.registerFactory(() => NotificacionesProvider(sl()));
+  sl.registerFactory(() => NotificacionesProvider(sl(), sl()));
 }

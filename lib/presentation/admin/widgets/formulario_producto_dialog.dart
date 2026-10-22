@@ -1,11 +1,10 @@
 // lib/presentation/admin/widgets/formulario_producto_dialog.dart
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-// Importamos nuestros nuevos sub-widgets
-import 'campos_pizza_widget.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/menu_provider.dart';
 import 'campos_bebida_widget.dart';
 import 'campos_extra_widget.dart';
+import 'campos_pizza_widget.dart';
 
 class FormularioProductoDialog extends StatefulWidget {
   final Map<String, dynamic>? producto;
@@ -24,9 +23,8 @@ class _FormularioProductoDialogState extends State<FormularioProductoDialog> {
   late final TextEditingController precioUnicoCtrl;
   late final TextEditingController precioMCtrl;
   late final TextEditingController volumenCtrl;
-  
-  bool _isLoading = false;
 
+  bool _isLoading = false;
   final List<String> categoriasValidas = ['Pizzas', 'Bebidas', 'Extras'];
 
   @override
@@ -34,12 +32,9 @@ class _FormularioProductoDialogState extends State<FormularioProductoDialog> {
     super.initState();
     final p = widget.producto;
     nombreCtrl = TextEditingController(text: p?['nombre'] ?? '');
-    
-    // Validación inicial de categoría
     String catInicial = p?['categoria'] ?? 'Pizzas';
     if (!categoriasValidas.contains(catInicial)) catInicial = 'Pizzas';
     categoriaCtrl = TextEditingController(text: catInicial);
-    
     precioGCtrl = TextEditingController(text: p?['precio_g']?.toString() ?? '');
     precioFCtrl = TextEditingController(text: p?['precio_f']?.toString() ?? '');
     precioUnicoCtrl = TextEditingController(text: p?['precio']?.toString() ?? '');
@@ -49,67 +44,53 @@ class _FormularioProductoDialogState extends State<FormularioProductoDialog> {
 
   @override
   void dispose() {
-    nombreCtrl.dispose();
-    categoriaCtrl.dispose();
-    precioGCtrl.dispose();
-    precioFCtrl.dispose();
-    precioUnicoCtrl.dispose();
-    precioMCtrl.dispose();
-    volumenCtrl.dispose();
+    for (final c in [nombreCtrl, categoriaCtrl, precioGCtrl, precioFCtrl, precioUnicoCtrl, precioMCtrl, volumenCtrl]) {
+      c.dispose();
+    }
     super.dispose();
   }
+
+  double? _parseNum(TextEditingController c) =>
+      double.tryParse(c.text.trim().replaceAll(',', '.'));
 
   Future<void> _guardar() async {
     setState(() => _isLoading = true);
     final esEdicion = widget.producto != null;
-    
     final datos = {
-      'nombre': nombreCtrl.text,
+      'nombre': nombreCtrl.text.trim(),
       'categoria': categoriaCtrl.text,
-      'precio_g': precioGCtrl.text.isNotEmpty ? double.parse(precioGCtrl.text) : null,
-      'precio_f': precioFCtrl.text.isNotEmpty ? double.parse(precioFCtrl.text) : null,
-      'precio': precioUnicoCtrl.text.isNotEmpty ? double.parse(precioUnicoCtrl.text) : null,
-      'precio_m': precioMCtrl.text.isNotEmpty ? double.parse(precioMCtrl.text) : null,
-      'volumen': volumenCtrl.text.isNotEmpty ? volumenCtrl.text : null,
+      'precio_g': _parseNum(precioGCtrl),
+      'precio_f': _parseNum(precioFCtrl),
+      'precio': _parseNum(precioUnicoCtrl),
+      'precio_m': _parseNum(precioMCtrl),
+      'volumen': volumenCtrl.text.trim().isNotEmpty ? volumenCtrl.text.trim() : null,
       'disponible': esEdicion ? widget.producto!['disponible'] : true,
     };
 
-    try {
-      if (esEdicion) {
-        await Supabase.instance.client.from('productos').update(datos).eq('id', widget.producto!['id']);
-      } else {
-        await Supabase.instance.client.from('productos').insert(datos);
-      }
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    final error = await context.read<MenuProvider>().guardarProducto(
+      id: esEdicion ? widget.producto!['id'] as int : null,
+      datos: datos,
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    if (error == null) {
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), backgroundColor: Colors.red),
+      );
     }
   }
 
-  // Lógica para decidir qué widget secundario mostrar
   Widget _buildCamposDinamicos() {
     final cat = categoriaCtrl.text.toLowerCase().trim();
-    
     if (cat == 'pizzas') {
-      return CamposPizzaWidget(
-        precioMCtrl: precioMCtrl,
-        precioGCtrl: precioGCtrl,
-        precioFCtrl: precioFCtrl,
-      );
+      return CamposPizzaWidget(precioMCtrl: precioMCtrl, precioGCtrl: precioGCtrl, precioFCtrl: precioFCtrl);
     } else if (cat == 'bebidas') {
-      return CamposBebidaWidget(
-        volumenCtrl: volumenCtrl,
-        precioUnicoCtrl: precioUnicoCtrl,
-      );
-    } else {
-      return CamposExtraWidget(
-        precioUnicoCtrl: precioUnicoCtrl,
-      );
+      return CamposBebidaWidget(volumenCtrl: volumenCtrl, precioUnicoCtrl: precioUnicoCtrl);
     }
+    return CamposExtraWidget(precioUnicoCtrl: precioUnicoCtrl);
   }
 
   @override
@@ -121,38 +102,20 @@ class _FormularioProductoDialogState extends State<FormularioProductoDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: nombreCtrl,
-              decoration: const InputDecoration(labelText: 'Nombre del producto'),
-            ),
+            TextField(controller: nombreCtrl, decoration: const InputDecoration(labelText: 'Nombre del producto')),
             const SizedBox(height: 10),
-            
-            // Reemplazo del TextField por un DropdownButtonFormField
             DropdownButtonFormField<String>(
               value: categoriaCtrl.text,
               decoration: const InputDecoration(labelText: 'Categoría'),
-              items: categoriasValidas.map((String cat) {
-                return DropdownMenuItem(value: cat, child: Text(cat));
-              }).toList(),
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  setState(() {
-                    categoriaCtrl.text = newValue;
-                  });
-                }
-              },
+              items: categoriasValidas.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+              onChanged: (val) => val != null ? setState(() => categoriaCtrl.text = val) : null,
             ),
-            
-            // Aquí llamamos a nuestra función que devuelve el widget modular
             _buildCamposDinamicos(),
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
         ElevatedButton(
           onPressed: _isLoading ? null : _guardar,
           child: _isLoading

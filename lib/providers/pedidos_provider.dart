@@ -1,56 +1,42 @@
 // lib/providers/pedidos_provider.dart
 import 'package:flutter/material.dart';
-
+import '../core/errors/failures.dart';
+import '../core/utils/result.dart';
 import '../data/models/pedido_detalle_model.dart';
 import '../data/models/producto_model.dart';
 import '../data/repositories/pedidos_repository.dart';
 import '../domain/usecases/gestionar_carrito_usecase.dart';
 import '../domain/usecases/tomar_pedido_usecase.dart';
-import '../core/utils/result.dart'; 
-import '../core/errors/failures.dart'; 
 
 class PedidosProvider extends ChangeNotifier {
   final TomarPedidoUseCase _tomarPedidoUseCase;
   final GestionarCarritoUseCase _gestionarCarritoUseCase;
   final PedidosRepository _pedidosRepository;
 
-  PedidosProvider(
-    this._tomarPedidoUseCase,
-    this._gestionarCarritoUseCase,
-    this._pedidosRepository,
-  );
+  PedidosProvider(this._tomarPedidoUseCase, this._gestionarCarritoUseCase, this._pedidosRepository);
 
-  // Estado puro de UI
   int? _mesaIdSeleccionada;
   String _mesaNombreSeleccionada = '';
   int? _pedidoActivoId;
-
   List<PedidoDetalleModel> _carrito = [];
   bool _isLoading = false;
   String _errorMessage = '';
+  bool _modoMitadYMitad = false;
+  ProductoModel? _primeraMitad;
 
-  // Getters
   int? get mesaIdSeleccionada => _mesaIdSeleccionada;
   String get mesaNombreSeleccionada => _mesaNombreSeleccionada;
   int? get pedidoActivoId => _pedidoActivoId;
   List<PedidoDetalleModel> get carrito => _carrito;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
-
-  double get totalPedido => _gestionarCarritoUseCase.calcularTotal(_carrito);
-
-  // --- LÓGICA DE MITAD Y MITAD FALTANTE ---
-  bool _modoMitadYMitad = false;
-  ProductoModel? _primeraMitad;
-
   bool get modoMitadYMitad => _modoMitadYMitad;
   ProductoModel? get primeraMitad => _primeraMitad;
+  double get totalPedido => _gestionarCarritoUseCase.calcularTotal(_carrito);
 
   void toggleModoMitad(bool valor) {
     _modoMitadYMitad = valor;
-    if (!valor) {
-      _primeraMitad = null; // Si se apaga el switch, limpiamos la selección
-    }
+    if (!valor) _primeraMitad = null;
     notifyListeners();
   }
 
@@ -65,24 +51,15 @@ class PedidosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Selección de mesa
   void seleccionarMesa(int mesaId, String mesaNombre, {int? pedidoId}) {
-    if (_mesaIdSeleccionada != null && _mesaIdSeleccionada != mesaId) {
-      _carrito.clear();
-    }
+    if (_mesaIdSeleccionada != null && _mesaIdSeleccionada != mesaId) _carrito.clear();
     _mesaIdSeleccionada = mesaId;
     _mesaNombreSeleccionada = mesaNombre;
     _pedidoActivoId = pedidoId;
     notifyListeners();
   }
 
-  // Delegar operaciones del carrito al Caso de Uso
-  void agregarAlCarrito({
-    required ProductoModel producto1,
-    ProductoModel? producto2,
-    required int cantidad,
-    required String talla,
-  }) {
+  void agregarAlCarrito({required ProductoModel producto1, ProductoModel? producto2, required int cantidad, required String talla}) {
     _carrito = _gestionarCarritoUseCase.agregarItem(
       carritoActual: _carrito,
       producto1: producto1,
@@ -106,7 +83,6 @@ class PedidosProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Enviar pedido delegando al UseCase usando Result/Failure
   Future<bool> enviarPedido() async {
     if (_isLoading) return false;
     _isLoading = true;
@@ -119,80 +95,38 @@ class PedidosProvider extends ChangeNotifier {
       total: totalPedido,
       pedidoActivoId: _pedidoActivoId,
     );
-
     _isLoading = false;
 
     if (result is Success) {
       limpiarCarrito();
-      notifyListeners();
       return true;
     } else if (result is Error<bool, Failure>) {
-      // Verificamos si es una falla de red (guardado offline exitoso)
+      _errorMessage = result.failure.message;
       if (result.failure is NetworkFailure) {
-        // Notificamos el mensaje pero consideramos que el mesero "terminó" su tarea
-        _errorMessage = result.failure.message;
         limpiarCarrito();
-        notifyListeners();
         return true;
       }
-
-      _errorMessage = result.failure.message;
       notifyListeners();
       return false;
     }
-
     notifyListeners();
     return false;
   }
 
-  // --- MÉTODOS DE STREAMS ---
-  
-  // 👇 NUEVA FUNCIÓN AGREGADA CORRECTAMENTE AL PROVIDER 👇
-  Stream<List<Map<String, dynamic>>> obtenerPedidosActivosStream() {
-    return _pedidosRepository.obtenerPedidosActivosStream();
-  }
-
-  // Expone el stream de todos los pedidos a la UI
-  Stream<List<Map<String, dynamic>>> obtenerTodosLosPedidosStream() {
-    return _pedidosRepository.obtenerTodosLosPedidosStream();
-  }
-
-  Stream<List<Map<String, dynamic>>> detallesPedidoStream(int pedidoId) {
-    return _pedidosRepository.obtenerDetallesPedidoStream(pedidoId);
-  }
-
-  Stream<String> estadoPedidoStream(int pedidoId) {
-    return _pedidosRepository.obtenerEstadoPedidoStream(pedidoId);
-  }
+  Stream<List<Map<String, dynamic>>> obtenerPedidosActivosStream() => _pedidosRepository.obtenerPedidosActivosStream();
+  Stream<List<Map<String, dynamic>>> obtenerTodosLosPedidosStream() => _pedidosRepository.obtenerTodosLosPedidosStream();
+  Stream<List<Map<String, dynamic>>> detallesPedidoStream(int pedidoId) => _pedidosRepository.obtenerDetallesPedidoStream(pedidoId);
+  Stream<String> estadoPedidoStream(int pedidoId) => _pedidosRepository.obtenerEstadoPedidoStream(pedidoId);
 
   Future<String?> actualizarEstado(int pedidoId, String nuevoEstado) async {
-    final result = await _pedidosRepository.actualizarEstadoPedido(
-      pedidoId,
-      nuevoEstado,
-    );
-    if (result is Error) {
-      return (result as Error).failure.message;
-    }
-    return null; // Éxito
+    final res = await _pedidosRepository.actualizarEstadoPedido(pedidoId, nuevoEstado);
+    return res is Error ? (res as Error).failure.message : null;
   }
 
-  // --- NUEVOS MÉTODOS AÑADIDOS (Separation of Concerns) ---
-
-  // Método para eliminar un detalle delegando al repositorio
   Future<String?> eliminarDetalle(int detalleId, int pedidoId) async {
-    final result = await _pedidosRepository.eliminarDetalleYActualizarPedido(
-      detalleId,
-      pedidoId,
-    );
-    
-    if (result is Error) {
-      return (result as Error).failure.message;
-    }
-    return null; // Retorna null si fue un éxito
+    final res = await _pedidosRepository.eliminarDetalleYActualizarPedido(detalleId, pedidoId);
+    return res is Error ? (res as Error).failure.message : null;
   }
 
-  // Método para sincronizar la cola offline
-  Future<void> sincronizarPedidosOffline() async {
-    await _pedidosRepository.sincronizarPedidosOffline();
-  }
+  Future<void> sincronizarPedidosOffline() => _pedidosRepository.sincronizarPedidosOffline();
 }

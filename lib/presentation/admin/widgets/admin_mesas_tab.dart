@@ -1,21 +1,17 @@
+// lib/presentation/admin/widgets/admin_mesas_tab.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../../../providers/mesas_provider.dart';
 import '../../../data/models/mesa_model.dart';
+import '../../../providers/mesas_provider.dart';
 import 'formulario_mesa_dialog.dart';
-
-// Eliminamos la importación de supabase_flutter
+import 'mesa_list_tile.dart';
 
 class AdminMesasTab extends StatelessWidget {
   const AdminMesasTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final ancho = MediaQuery.of(context).size.width;
-    final esMovil = ancho < 600;
-
-    // Accedemos a nuestro Provider inyectado
+    final esMovil = MediaQuery.of(context).size.width < 600;
     final mesasProvider = context.read<MesasProvider>();
 
     void abrirFormularioNuevo() {
@@ -75,14 +71,12 @@ class AdminMesasTab extends StatelessWidget {
               ),
             ),
           Expanded(
-            // Ahora escuchamos objetos MesaModel puros, no Map<String, dynamic>
             child: StreamBuilder<List<MesaModel>>(
               stream: mesasProvider.mesasStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
                 final mesas = snapshot.data ?? [];
 
                 return ListView.builder(
@@ -90,47 +84,23 @@ class AdminMesasTab extends StatelessWidget {
                   itemCount: mesas.length,
                   itemBuilder: (context, index) {
                     final m = mesas[index];
-                    return ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: Colors.indigoAccent,
-                        child: Icon(Icons.chair_alt, color: Colors.white),
+                    return MesaListTile(
+                      mesa: m.toJson(),
+                      onEdit: () => showDialog(
+                        context: context,
+                        builder: (_) => FormularioMesaDialog(mesa: m.toJson()),
                       ),
-                      title: Text(
-                        m.nombre,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('Orden de vista: ${m.orden}'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () => showDialog(
-                              context: context,
-                              // Tendrás que adaptar tu FormularioMesaDialog para que acepte un MesaModel o transformar esto a JSON temporalmente
-                              builder: (_) =>
-                                  FormularioMesaDialog(mesa: m.toJson()),
+                      onDelete: () async {
+                        final errorMsg = await mesasProvider.eliminarMesa(m.id);
+                        if (errorMsg != null && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(errorMsg),
+                              backgroundColor: Colors.red,
                             ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () async {
-                              // La UI solo llama al método del provider y muestra el resultado
-                              final errorMsg = await mesasProvider.eliminarMesa(
-                                m.id,
-                              );
-                              if (errorMsg != null && context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(errorMsg),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-                        ],
-                      ),
+                          );
+                        }
+                      },
                     );
                   },
                 );

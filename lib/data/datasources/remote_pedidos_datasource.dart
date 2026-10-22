@@ -1,8 +1,7 @@
 // lib/data/datasources/remote_pedidos_datasource.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../models/pedido_detalle_model.dart';
 import '../../core/errors/exceptions.dart';
+import '../models/pedido_detalle_model.dart';
 
 class RemotePedidosDataSource {
   final SupabaseClient _supabase;
@@ -16,11 +15,14 @@ class RemotePedidosDataSource {
     int? pedidoIdExistente,
   }) async {
     int? pedidoIdCreado;
-
     try {
       int pedidoId;
       if (pedidoIdExistente != null) {
         pedidoId = pedidoIdExistente;
+        await _supabase
+            .from('pedidos')
+            .update({'estado': 'pendiente'})
+            .eq('id', pedidoId);
       } else {
         final pedidoResponse = await _supabase
             .from('pedidos')
@@ -32,7 +34,6 @@ class RemotePedidosDataSource {
             })
             .select('id')
             .single();
-
         pedidoId = pedidoResponse['id'];
         pedidoIdCreado = pedidoId;
       }
@@ -43,10 +44,8 @@ class RemotePedidosDataSource {
           json['pedido_id'] = pedidoId;
           return json;
         }).toList();
-
         await _supabase.from('detalles_pedido').insert(detallesAInsertar);
       }
-
       return pedidoId;
     } catch (e) {
       if (pedidoIdCreado != null) {
@@ -54,7 +53,6 @@ class RemotePedidosDataSource {
           await _supabase.from('pedidos').delete().eq('id', pedidoIdCreado);
         } catch (_) {}
       }
-      // El DataSource lanza Excepciones, no Failures
       throw ServerException('Fallo al registrar la orden: $e');
     }
   }
@@ -65,13 +63,11 @@ class RemotePedidosDataSource {
   ) async {
     try {
       await _supabase.from('detalles_pedido').delete().eq('id', detalleId);
-
       final response = await _supabase
           .from('detalles_pedido')
           .select('id')
           .eq('pedido_id', pedidoId)
           .limit(1);
-
       if (response.isEmpty) {
         await _supabase
             .from('pedidos')
@@ -94,8 +90,6 @@ class RemotePedidosDataSource {
     }
   }
 
-  // --- STREAMS ORIGINALES ---
-
   Stream<List<Map<String, dynamic>>> obtenerTodosLosPedidosStream() {
     return _supabase
         .from('pedidos')
@@ -115,36 +109,13 @@ class RemotePedidosDataSource {
         .from('pedidos')
         .stream(primaryKey: ['id'])
         .eq('id', pedidoId)
-        .map(
-          (data) =>
-              data.isEmpty ? 'pendiente' : data.first['estado'] ?? 'pendiente',
-        );
+        .map((data) => data.isEmpty ? 'pendiente' : data.first['estado'] ?? 'pendiente');
   }
 
-  // --- NUEVAS OPTIMIZACIONES DE RENDIMIENTO ---
-
-  /// Llamada al RPC para delegar los cálculos estadísticos a la base de datos
-  /// Ideal para el panel de administración
-  Future<Map<String, dynamic>> obtenerEstadisticasMesas() async {
-    try {
-      final response = await _supabase.rpc('obtener_estadisticas_mesas');
-      return response as Map<String, dynamic>;
-    } catch (e) {
-      throw ServerException('Error al obtener estadísticas de mesas: $e');
-    }
-  }
-
-  // lib/data/datasources/remote_pedidos_datasource.dart
-  // (Mantén el resto del archivo igual y solo reemplaza esta función al final)
-
-  /// Stream optimizado. Quitamos el filtro .neq() del servidor porque causaba
-  /// bugs de sincronización en tiempo real con Supabase.
-  /// Ahora el filtrado lo hace la UI de forma segura.
   Stream<List<Map<String, dynamic>>> obtenerPedidosActivosStream() {
     return _supabase
         .from('pedidos')
         .stream(primaryKey: ['id'])
-        // ELIMINAMOS los .neq('estado', 'pagado') que congelaban la mesa
         .order('fecha', ascending: true);
   }
 }

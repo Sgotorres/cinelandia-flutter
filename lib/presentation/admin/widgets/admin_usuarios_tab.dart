@@ -1,19 +1,17 @@
+// lib/presentation/admin/widgets/admin_usuarios_tab.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-import '../../../providers/usuarios_provider.dart';
 import '../../../data/models/usuario_model.dart';
+import '../../../providers/usuarios_provider.dart';
 import 'formulario_usuario_dialog.dart';
+import 'usuario_list_tile.dart';
 
 class AdminUsuariosTab extends StatelessWidget {
   const AdminUsuariosTab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final ancho = MediaQuery.of(context).size.width;
-    final esMovil = ancho < 600;
-
-    // Conectamos con el provider en lugar de instanciar Supabase
+    final esMovil = MediaQuery.of(context).size.width < 600;
     final usuariosProvider = context.read<UsuariosProvider>();
 
     void abrirFormularioNuevo() {
@@ -79,7 +77,6 @@ class AdminUsuariosTab extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
                 final usuarios = snapshot.data ?? [];
                 if (usuarios.isEmpty) {
                   return const Center(
@@ -92,43 +89,21 @@ class AdminUsuariosTab extends StatelessWidget {
                   itemCount: usuarios.length,
                   itemBuilder: (context, index) {
                     final user = usuarios[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.indigo.shade100,
-                        child: Text(
-                          user.nombre.isNotEmpty
-                              ? user.nombre[0].toUpperCase()
-                              : 'U',
-                          style: const TextStyle(
-                            color: Colors.indigo,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        '${user.nombre} ${user.apellido}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('${user.correo} • ${user.rol}'),
-                      trailing: IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.red,
-                        ),
-                        onPressed: () async {
-                          final error = await usuariosProvider.eliminarUsuario(
-                            user.id,
+                    return UsuarioListTile(
+                      usuario: user,
+                      onDelete: () async {
+                        final error = await usuariosProvider.eliminarUsuario(
+                          user.id,
+                        );
+                        if (error != null && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(error),
+                              backgroundColor: Colors.red,
+                            ),
                           );
-                          if (error != null && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(error),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                      ),
+                        }
+                      },
                     );
                   },
                 );

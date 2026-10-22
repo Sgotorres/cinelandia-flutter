@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/notificaciones_provider.dart';
+import 'panel_notificaciones_modal.dart';
 
 class CampanitaWidget extends StatefulWidget {
   final Color iconColor;
@@ -13,181 +14,96 @@ class CampanitaWidget extends StatefulWidget {
 }
 
 class _CampanitaWidgetState extends State<CampanitaWidget> {
-  late Stream<List<Map<String, dynamic>>> _notificacionesStream;
+  String _rolConfigurado = '';
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final miRol = context.read<AuthProvider>().userRole;
-    // Delegamos al provider, limpiando completamente el acceso a Supabase desde la UI
-    _notificacionesStream = context.read<NotificacionesProvider>().notificacionesStream(miRol);
-  }
-
-  Future<void> _enviarTimbre(String miRol, String miNombre) async {
-    // 1. Capturamos el ScaffoldMessenger ANTES del gap asíncrono
-    final messenger = ScaffoldMessenger.of(context);
-
-    // 2. Cierre Síncrono: Cerramos el modal inmediatamente sin esperar a Supabase.
-    // Esto garantiza que cerramos exactamente el BottomSheet y damos feedback rápido al usuario.
-    Navigator.pop(context);
-
-    try {
-      // 3. Ejecutamos la operación asíncrona de fondo
-      await context.read<NotificacionesProvider>().enviarTimbre(miRol, miNombre);
-
-      // 4. Usamos el messenger capturado (ya no dependemos de 'context' tras el await)
-      if (mounted) {
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('¡Timbre enviado exitosamente!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error enviando timbre: $e');
-      if (mounted) {
-        // Manejo de error visual por si falla la conexión
-        messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Error al enviar el timbre. Verifica tu conexión.'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _marcarComoLeida(int id) async {
-    await context.read<NotificacionesProvider>().marcarComoLeida(id);
-  }
-
-  void _abrirPanelNotificaciones(BuildContext context, String miRol, String miNombre) {
+  void _abrirPanel(BuildContext context, String miRol, String miNombre) {
+    context.read<NotificacionesProvider>().configurarRol(miRol);
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(24),
-          height: MediaQuery.of(context).size.height * 0.5,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Llamadas Activas',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: _notificacionesStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final notificaciones = snapshot.data ?? [];
-                    
-                    if (notificaciones.isEmpty) {
-                      return const Center(
-                        child: Text('No tienes llamadas pendientes', style: TextStyle(color: Colors.grey)),
-                      );
-                    }
-                    return ListView.builder(
-                      itemCount: notificaciones.length,
-                      itemBuilder: (context, index) {
-                        final noti = notificaciones[index];
-                        return Card(
-                          color: Colors.orange.shade50,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.orange.shade200),
-                          ),
-                          child: ListTile(
-                            leading: const Icon(Icons.notifications_active, color: Colors.orange),
-                            title: Text(noti['mensaje'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.check_circle_outline, color: Colors.green),
-                              tooltip: 'Marcar como atendido',
-                              onPressed: () => _marcarComoLeida(noti['id']),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  icon: const Icon(Icons.touch_app, color: Colors.white),
-                  label: Text(
-                    miRol == 'admin' ? 'Timbrar a Meseros' : 'Timbrar a Administración',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  onPressed: () => _enviarTimbre(miRol, miNombre),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+      builder: (_) => PanelNotificacionesModal(
+        miRol: miRol,
+        miNombre: miNombre,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final notiProvider = context.watch<NotificacionesProvider>();
     final miRol = authProvider.userRole;
     final miNombre = authProvider.nombreCompleto;
-    
-    return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: _notificacionesStream,
-      builder: (context, snapshot) {
-        final notificaciones = snapshot.data ?? [];
-        final tieneNuevas = notificaciones.isNotEmpty;
-        
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            IconButton(
-              icon: Icon(
-                tieneNuevas ? Icons.notifications_active : Icons.notifications_none,
-                color: widget.iconColor,
-                size: 28,
+
+    if (miRol.isNotEmpty && miRol != _rolConfigurado) {
+      _rolConfigurado = miRol;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          context.read<NotificacionesProvider>().configurarRol(miRol);
+        }
+      });
+    }
+
+    final mensajeNuevo = notiProvider.ultimoMensajeRecibido;
+    if (mensajeNuevo != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notiProvider.limpiarUltimoMensaje();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                mensajeNuevo,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              onPressed: () => _abrirPanelNotificaciones(context, miRol, miNombre),
+              backgroundColor: Colors.orange.shade800,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
             ),
-            if (tieneNuevas)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    '${notificaciones.length}',
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
+          );
+        }
+      });
+    }
+
+    final notificaciones = notiProvider.notificaciones;
+    final tieneNuevas = notificaciones.isNotEmpty;
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          tooltip: 'Notificaciones y Timbre',
+          icon: Icon(
+            tieneNuevas
+                ? Icons.notifications_active
+                : Icons.notifications_none,
+            color: widget.iconColor,
+            size: 28,
+          ),
+          onPressed: () => _abrirPanel(context, miRol, miNombre),
+        ),
+        if (tieneNuevas)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.redAccent,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                '${notificaciones.length}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-          ],
-        );
-      },
+            ),
+          ),
+      ],
     );
   }
 }

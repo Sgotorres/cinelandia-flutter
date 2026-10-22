@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:cinelandia/providers/notificaciones_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +14,7 @@ import 'core/routes/app_router.dart';
 // Inyección de Dependencias
 import 'core/di/injection.dart' as di;
 
-// Providers (Ya no importamos el repositorio aquí)
+// Providers
 import 'providers/menu_provider.dart';
 import 'providers/pedidos_provider.dart';
 import 'providers/auth_provider.dart';
@@ -63,20 +66,22 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // ELIMINADO: Ya no inyectamos el repositorio aquí manualmente
+  late final GoRouter _router;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
 
   @override
   void initState() {
     super.initState();
+    // Instanciamos GoRouter UNA sola vez para preservar el estado de navegación
+    _router = AppRouter.router(context);
+
     // Escuchar cambios de internet globalmente
-    Connectivity().onConnectivityChanged.listen((
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
       List<ConnectivityResult> results,
     ) {
       if (!results.contains(ConnectivityResult.none)) {
         debugPrint('Internet restaurado. Sincronizando comandas pendientes...');
-        
-        // NUEVO: Delegamos la orden de sincronizar al Provider (que contiene la lógica de negocio)
-        // usando el contexto de la aplicación, ya que MyApp es hijo de MultiProvider.
+
         if (mounted) {
           context.read<PedidosProvider>().sincronizarPedidosOffline();
         }
@@ -85,11 +90,18 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    _router.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Pizza Planeta', // O Pizzeria Panzerotto según tu preferencia
-      routerConfig: AppRouter.router(context),
+      title: 'Pizza Planeta',
+      routerConfig: _router,
     );
   }
 }

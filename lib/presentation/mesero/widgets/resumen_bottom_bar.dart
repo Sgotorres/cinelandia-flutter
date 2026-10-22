@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/routes/app_routes.dart';
 import '../../../providers/pedidos_provider.dart';
 
 class ResumenBottomBar extends StatelessWidget {
@@ -13,7 +14,7 @@ class ResumenBottomBar extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)), // Bordes superiores muy redondeados
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
           BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 20, offset: const Offset(0, -5))
         ],
@@ -28,15 +29,15 @@ class ResumenBottomBar extends StatelessWidget {
               children: [
                 const Text('Total a pagar', style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w600)),
                 Text(
-                  '\$${pedidosProvider.totalPedido.toStringAsFixed(2)}', 
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.green)
+                  '\$${pedidosProvider.totalPedido.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.green),
                 ),
               ],
             ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              height: 56, // Botón más alto para mejor hit-box
+              height: 56,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.indigo,
@@ -52,10 +53,10 @@ class ResumenBottomBar extends StatelessWidget {
                             const SnackBar(
                               content: Text('¡Pedido enviado a cocina!'),
                               backgroundColor: Colors.green,
-                              behavior: SnackBarBehavior.floating, // Notificación flotante moderna
+                              behavior: SnackBarBehavior.floating,
                             ),
                           );
-                          context.go('/mesero');
+                          context.go(AppRoutes.mesero);
                         } else if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(

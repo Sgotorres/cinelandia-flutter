@@ -1,8 +1,6 @@
 // lib/providers/menu_provider.dart
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-
 import '../core/utils/result.dart';
 import '../data/models/producto_model.dart';
 import '../data/repositories/menu_repository.dart';
@@ -48,14 +46,17 @@ class MenuProvider extends ChangeNotifier {
     );
   }
 
-  // --- NUEVAS ACCIONES DEL ADMINISTRADOR ---
+  Future<String?> guardarProducto({
+    int? id,
+    required Map<String, dynamic> datos,
+  }) async {
+    final result = await _menuRepository.guardarProducto(id: id, datos: datos);
+    return result is Error ? (result as Error).failure.message : null;
+  }
 
   Future<String?> eliminarProducto(int id) async {
     final result = await _menuRepository.eliminarProducto(id);
-    if (result is Error) {
-      return (result as Error).failure.message;
-    }
-    return null; // Éxito
+    return result is Error ? (result as Error).failure.message : null;
   }
 
   Future<String?> actualizarDisponibilidad(int id, bool disponible) async {
@@ -63,10 +64,7 @@ class MenuProvider extends ChangeNotifier {
       id,
       disponible,
     );
-    if (result is Error) {
-      return (result as Error).failure.message;
-    }
-    return null; // Éxito
+    return result is Error ? (result as Error).failure.message : null;
   }
 
   @override

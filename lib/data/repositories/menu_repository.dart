@@ -1,6 +1,5 @@
 // lib/data/repositories/menu_repository.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../core/errors/failures.dart';
 import '../../core/utils/result.dart';
 import '../models/producto_model.dart';
@@ -22,7 +21,23 @@ class MenuRepository {
         );
   }
 
-  // --- NUEVAS FUNCIONES DE ADMINISTRADOR ---
+  Future<Result<bool, Failure>> guardarProducto({
+    int? id,
+    required Map<String, dynamic> datos,
+  }) async {
+    try {
+      if (id != null) {
+        await _supabase.from('productos').update(datos).eq('id', id);
+      } else {
+        await _supabase.from('productos').insert(datos);
+      }
+      return const Success(true);
+    } on PostgrestException catch (e) {
+      return Error(ServerFailure('Error en base de datos: ${e.message}'));
+    } catch (e) {
+      return Error(ServerFailure('Error al guardar producto: $e'));
+    }
+  }
 
   Future<Result<bool, Failure>> eliminarProducto(int id) async {
     try {
@@ -30,7 +45,7 @@ class MenuRepository {
       return const Success(true);
     } on PostgrestException catch (e) {
       return Error(ServerFailure('Error en base de datos: ${e.message}'));
-    } catch (e) {
+    } catch (_) {
       return const Error(
         ServerFailure('Ocurrió un error inesperado al eliminar.'),
       );
@@ -47,7 +62,7 @@ class MenuRepository {
           .update({'disponible': disponible})
           .eq('id', id);
       return const Success(true);
-    } catch (e) {
+    } catch (_) {
       return const Error(ServerFailure('Error al actualizar disponibilidad.'));
     }
   }
