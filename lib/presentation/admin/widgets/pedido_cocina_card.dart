@@ -1,6 +1,7 @@
 // lib/presentation/admin/widgets/pedido_cocina_card.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../mesero/providers/pedidos_provider.dart';
 import 'lista_articulos_pedido.dart';
 
@@ -46,7 +47,7 @@ class PedidoCocinaCard extends StatelessWidget {
       case 'horno':
         return Colors.blue;
       case 'lista':
-        return Colors.greenAccent.shade700;
+        return Colors.teal; // ANTES: Colors.greenAccent.shade700
       case 'comiendo':
         return Colors.purple;
       default:

@@ -1,5 +1,6 @@
 // lib/presentation/mesero/widgets/comanda_card.dart
 import 'package:flutter/material.dart';
+
 import 'comanda_detalles_modal.dart';
 
 class ComandaCard extends StatelessWidget {
@@ -28,7 +29,7 @@ class ComandaCard extends StatelessWidget {
       case 'comiendo':
         return Colors.purple;
       case 'lista':
-        return Colors.greenAccent.shade700;
+        return Colors.teal; // ANTES: Colors.greenAccent.shade700
       default:
         return Colors.grey;
     }
@@ -40,9 +41,7 @@ class ComandaCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: ListTile(
         contentPadding: const EdgeInsets.all(16),
@@ -52,10 +51,7 @@ class ComandaCard extends StatelessWidget {
         ),
         title: Text(
           nombreMesa,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4.0),
@@ -65,10 +61,7 @@ class ComandaCard extends StatelessWidget {
           ),
         ),
         trailing: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
             color: colorEstado,
             borderRadius: BorderRadius.circular(20),

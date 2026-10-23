@@ -23,8 +23,12 @@ class LeyendaMesas extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Estado de Mesas', 
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)
+          'Estado de Mesas',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
         ),
         const SizedBox(height: 12),
         // Hacemos la fila scrolleable por si hay pantallas muy estrechas
@@ -34,11 +38,19 @@ class LeyendaMesas extends StatelessWidget {
             children: [
               _Badge(texto: 'Libres', count: disponibles, color: Colors.green),
               const SizedBox(width: 8),
-              _Badge(texto: 'Pendiente', count: pendientes, color: Colors.orange),
+              _Badge(
+                texto: 'Pendiente',
+                count: pendientes,
+                color: Colors.orange,
+              ),
               const SizedBox(width: 8),
               _Badge(texto: 'En Horno', count: horno, color: Colors.blue),
               const SizedBox(width: 8),
-              _Badge(texto: 'Listas', count: lista, color: Colors.greenAccent.shade700),
+              _Badge(
+                texto: 'Listas',
+                count: lista,
+                color: Colors.teal,
+              ), // ANTES: Colors.greenAccent.shade700
               const SizedBox(width: 8),
               _Badge(texto: 'Comiendo', count: comiendo, color: Colors.purple),
             ],
@@ -73,8 +85,12 @@ class _Badge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            texto, 
-            style: TextStyle(color: activeColor, fontSize: 13, fontWeight: FontWeight.bold)
+            texto,
+            style: TextStyle(
+              color: activeColor,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(width: 6),
           Container(
@@ -84,8 +100,12 @@ class _Badge extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              '$count', 
-              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)
+              '$count',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

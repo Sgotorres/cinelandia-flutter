@@ -27,7 +27,7 @@ class MesaCard extends StatelessWidget {
       case 'comiendo':
         return Colors.purple;
       case 'lista':
-        return Colors.greenAccent.shade700;
+        return Colors.teal; // ANTES: Colors.greenAccent.shade700
       default:
         return Colors.green; // Disponible
     }

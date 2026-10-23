@@ -59,7 +59,7 @@ class BotonAvanzarEstado extends StatelessWidget {
       case 'lista':
         texto = 'Entregar en Mesa';
         icono = Icons.room_service;
-        color = Colors.greenAccent.shade700;
+        color = Colors.teal; // ANTES: Colors.greenAccent.shade700
         break;
       case 'comiendo':
         texto = 'Cobrar y Liberar';
