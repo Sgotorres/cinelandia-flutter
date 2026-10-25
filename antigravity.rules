@@ -1,0 +1,3 @@
+- Realiza la lectura, búsqueda e inspección de archivos de forma completamente autónoma.
+- No pidas aprobación previa para leer código o explorar directorios.
+- Detén la ejecución y pregunta únicamente ante dudas críticas de lógica de negocio o antes de cambios destructivos e irreversibles.
